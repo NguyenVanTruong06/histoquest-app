@@ -62,48 +62,55 @@ class _PrimaryButtonState extends State<PrimaryButton> {
           widget.icon!,
           const SizedBox(width: 8),
         ],
-        Text(
-          widget.label,
-          style: TextStyle(
-            fontSize: widget.fontSize,
-            fontWeight: FontWeight.w600,
-            color: effectiveTextColor,
-            letterSpacing: 0.2,
+        Flexible(
+          child: Text(
+            widget.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: widget.fontSize,
+              fontWeight: FontWeight.w600,
+              color: effectiveTextColor,
+              letterSpacing: 0.2,
+            ),
           ),
         ),
       ],
     );
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 70),
-      margin: EdgeInsets.only(top: topMargin, bottom: 5 - bottomOffset),
-      height: widget.height,
+    return SizedBox(
       width: widget.isFullWidth ? double.infinity : null,
-      decoration: BoxDecoration(
-        color: isDisabled ? effectiveBgColor.withValues(alpha: 0.5) : effectiveBgColor,
-        borderRadius: BorderRadius.circular(99),
-        boxShadow: bottomOffset > 0
-            ? [
-                BoxShadow(
-                  color: effectiveShadowColor,
-                  offset: Offset(0, bottomOffset),
-                  blurRadius: 0,
-                ),
-              ]
-            : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(99),
-        child: InkWell(
-          onTap: isDisabled ? null : widget.onPressed,
-          onTapDown: isDisabled ? null : (_) => setState(() => _isPressed = true),
-          onTapUp: isDisabled ? null : (_) => setState(() => _isPressed = false),
-          onTapCancel: isDisabled ? null : () => setState(() => _isPressed = false),
+      height: widget.height + 5,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 70),
+        margin: EdgeInsets.only(top: topMargin, bottom: 5 - bottomOffset),
+        height: widget.height,
+        decoration: BoxDecoration(
+          color: isDisabled ? effectiveBgColor.withValues(alpha: 0.5) : effectiveBgColor,
           borderRadius: BorderRadius.circular(99),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: content,
+          boxShadow: bottomOffset > 0
+              ? [
+                  BoxShadow(
+                    color: effectiveShadowColor,
+                    offset: Offset(0, bottomOffset),
+                    blurRadius: 0,
+                  ),
+                ]
+              : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(99),
+          child: InkWell(
+            onTap: isDisabled ? null : widget.onPressed,
+            onTapDown: isDisabled ? null : (_) => setState(() => _isPressed = true),
+            onTapUp: isDisabled ? null : (_) => setState(() => _isPressed = false),
+            onTapCancel: isDisabled ? null : () => setState(() => _isPressed = false),
+            borderRadius: BorderRadius.circular(99),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: content,
+            ),
           ),
         ),
       ),
