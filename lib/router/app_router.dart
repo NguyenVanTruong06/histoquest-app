@@ -9,6 +9,7 @@ import '../features/ranks/presentation/ranks_screen.dart';
 import '../features/games/presentation/games_screen.dart';
 import '../features/social/presentation/social_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
+import '../features/quiz/presentation/quiz_screen.dart';
 import '../shared/widgets/scaffold_with_nav_bar.dart';
 
 part 'app_router.g.dart';
@@ -108,6 +109,12 @@ GoRouter goRouter(Ref ref) {
             ],
           ),
         ],
+      ),
+      // Màn 2 - Quiz toàn màn hình dành cho bài học tương tác
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/quiz',
+        builder: (context, state) => const QuizScreen(),
       ),
     ],
   );

@@ -46,7 +46,7 @@ class _ErasScreenState extends State<ErasScreen> {
         icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
         onPressed: () {
           Navigator.pop(context);
-          context.go('/eras/${_currentEra.id}');
+          context.push('/quiz');
         },
       ),
       child: Column(
@@ -329,7 +329,7 @@ class _ErasScreenState extends State<ErasScreen> {
                     height: 58,
                     fontSize: 18,
                     icon: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 20),
-                    onPressed: () => context.go('/eras/era_1'),
+                    onPressed: () => context.push('/quiz'),
                   ),
                 ],
               ),
