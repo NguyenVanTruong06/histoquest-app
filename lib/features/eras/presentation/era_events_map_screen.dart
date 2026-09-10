@@ -65,7 +65,7 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
         ),
         onPressed: () {
           Navigator.pop(context);
-          context.push('/quiz');
+          context.push('/eras/${widget.eraId}/events/${event.id}');
         },
       ),
       child: Column(

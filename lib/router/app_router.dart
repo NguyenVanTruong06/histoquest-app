@@ -10,6 +10,8 @@ import '../features/games/presentation/games_screen.dart';
 import '../features/social/presentation/social_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/quiz/presentation/quiz_screen.dart';
+import '../features/quiz/presentation/quiz_result_screen.dart';
+import '../data/models/historical_event_model.dart';
 import '../shared/widgets/scaffold_with_nav_bar.dart';
 
 part 'app_router.g.dart';
@@ -110,11 +112,29 @@ GoRouter goRouter(Ref ref) {
           ),
         ],
       ),
-      // Màn 2 - Quiz toàn màn hình dành cho bài học tương tác
+      // Màn 2 - Quiz toàn màn hình
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/quiz',
-        builder: (context, state) => const QuizScreen(),
+        builder: (context, state) {
+          final event = state.extra as HistoricalEventModel?;
+          return QuizScreen(event: event);
+        },
+        routes: [
+          // Màn 3 - Kết quả Quiz
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: 'result',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>? ?? {};
+              return QuizResultScreen(
+                correctCount: extra['correctCount'] as int? ?? 0,
+                totalCount: extra['totalCount'] as int? ?? 3,
+                event: extra['event'] as HistoricalEventModel?,
+              );
+            },
+          ),
+        ],
       ),
     ],
   );

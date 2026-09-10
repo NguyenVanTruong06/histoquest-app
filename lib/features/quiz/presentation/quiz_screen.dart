@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/quiz_models.dart';
-import '../../../shared/widgets/primary_button.dart';
-import '../../../shared/widgets/stat_badge.dart';
+import '../../../data/models/historical_event_model.dart';
 import 'widgets/quiz_progress_header.dart';
 import 'widgets/single_choice_widget.dart';
 import 'widgets/true_false_widget.dart';
@@ -12,10 +11,12 @@ import 'widgets/quiz_explanation_sheet.dart';
 
 class QuizScreen extends StatefulWidget {
   final List<QuizItem>? questions;
+  final HistoricalEventModel? event;
 
   const QuizScreen({
     super.key,
     this.questions,
+    this.event,
   });
 
   @override
@@ -26,7 +27,6 @@ class _QuizScreenState extends State<QuizScreen> {
   late final List<QuizItem> _questions;
   int _currentIndex = 0;
   int _correctCount = 0;
-  bool _isFinished = false;
 
   // Trạng thái của câu hỏi hiện tại
   AnswerStatus _currentStatus = AnswerStatus.unanswered;
@@ -37,7 +37,19 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
-    _questions = widget.questions ?? MockQuizData.bachDangQuiz;
+    // Ưu tiên câu hỏi từ event (Màn 1 → Màn 2), sau đó fallback sang mock data
+    if (widget.event != null && widget.event!.questions.isNotEmpty) {
+      _questions = widget.event!.questions.map((q) => QuizItem(
+        id: q.id,
+        type: QuizType.singleChoice,
+        question: q.question,
+        options: q.options,
+        correctIndex: q.correctAnswerIndex,
+        explanation: q.explanation,
+      )).toList();
+    } else {
+      _questions = widget.questions ?? MockQuizData.bachDangQuiz;
+    }
     _initCurrentQuestion();
   }
 
@@ -106,9 +118,15 @@ class _QuizScreenState extends State<QuizScreen> {
         _initCurrentQuestion();
       });
     } else {
-      setState(() {
-        _isFinished = true;
-      });
+      // Điều hướng sang màn Kết quả (Màn 3)
+      context.push(
+        '/quiz/result',
+        extra: {
+          'correctCount': _correctCount,
+          'totalCount': _questions.length,
+          'event': widget.event,
+        },
+      );
     }
   }
 
@@ -123,7 +141,7 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _isFinished ? _buildResultView() : _buildQuizView(),
+      body: _buildQuizView(),
     );
   }
 
@@ -217,145 +235,4 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  Widget _buildResultView() {
-    final isMastery = _correctCount == _questions.length;
-
-    return SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Cúp vinh danh với gradient vàng
-              Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFE4A93A), Color(0xFFD95D39)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.emoji_events_rounded,
-                  size: 60,
-                  color: Colors.white,
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              Text(
-                isMastery ? 'Tuyệt Vời! Xuất Sắc!' : 'Hoàn Thành Bài Học!',
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '938 · Chiến thắng Bạch Đằng',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryDark,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Thẻ kết quả
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.cardBorder, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Kết quả của bạn',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '$_correctCount / ${_questions.length} Câu đúng',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(color: Color(0xFFF0EAE1)),
-                    const SizedBox(height: 12),
-
-                    const Text(
-                      'Phần thưởng đã nhận:',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        StatBadge(type: StatType.xp, label: '+120 XP'),
-                        StatBadge(type: StatType.coin, label: '+40 xu'),
-                        StatBadge(type: StatType.reward, label: 'Thẻ Ngô Quyền 3⭐'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              PrimaryButton(
-                label: 'Trở về Bản Đồ',
-                isFullWidth: true,
-                height: 56,
-                icon: const Icon(Icons.map_rounded, color: Colors.white, size: 20),
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/eras');
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
