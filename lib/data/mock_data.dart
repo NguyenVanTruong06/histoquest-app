@@ -113,6 +113,7 @@ class MockData {
           rewardCardName: 'Thẻ Ngô Quyền 3⭐',
           isCompleted: false,
           isCurrentActive: true,
+          isMajorMilestone: true,
           questions: [
             QuizQuestionModel(
               id: 'q_938_1',
@@ -179,6 +180,7 @@ class MockData {
           xpReward: 110,
           coinReward: 35,
           isCompleted: false,
+          isMajorMilestone: true,
         ),
       ],
     ),

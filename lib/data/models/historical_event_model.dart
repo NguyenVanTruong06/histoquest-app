@@ -50,6 +50,7 @@ class HistoricalEventModel {
   final String? rewardCardName;
   final bool isCompleted;
   final bool isCurrentActive;
+  final bool isMajorMilestone;
   final List<QuizQuestionModel> questions;
 
   const HistoricalEventModel({
@@ -65,6 +66,7 @@ class HistoricalEventModel {
     this.rewardCardName,
     this.isCompleted = false,
     this.isCurrentActive = false,
+    this.isMajorMilestone = false,
     this.questions = const [],
   });
 
@@ -81,6 +83,7 @@ class HistoricalEventModel {
     String? rewardCardName,
     bool? isCompleted,
     bool? isCurrentActive,
+    bool? isMajorMilestone,
     List<QuizQuestionModel>? questions,
   }) {
     return HistoricalEventModel(
@@ -96,6 +99,7 @@ class HistoricalEventModel {
       rewardCardName: rewardCardName ?? this.rewardCardName,
       isCompleted: isCompleted ?? this.isCompleted,
       isCurrentActive: isCurrentActive ?? this.isCurrentActive,
+      isMajorMilestone: isMajorMilestone ?? this.isMajorMilestone,
       questions: questions ?? this.questions,
     );
   }
@@ -114,6 +118,7 @@ class HistoricalEventModel {
       'rewardCardName': rewardCardName,
       'isCompleted': isCompleted,
       'isCurrentActive': isCurrentActive,
+      'isMajorMilestone': isMajorMilestone,
       'questions': questions.map((q) => q.toJson()).toList(),
     };
   }
@@ -132,6 +137,7 @@ class HistoricalEventModel {
       rewardCardName: json['rewardCardName'] as String?,
       isCompleted: json['isCompleted'] as bool? ?? false,
       isCurrentActive: json['isCurrentActive'] as bool? ?? false,
+      isMajorMilestone: json['isMajorMilestone'] as bool? ?? false,
       questions: (json['questions'] as List<dynamic>?)
               ?.map((e) => QuizQuestionModel.fromJson(e as Map<String, dynamic>))
               .toList() ??

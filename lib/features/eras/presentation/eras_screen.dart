@@ -191,25 +191,32 @@ class _ErasScreenState extends State<ErasScreen> {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.darkBackground,
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => context.push('/eras/${_currentEra.id}'),
                     borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.timeline_rounded, color: Colors.white, size: 16),
-                      SizedBox(width: 6),
-                      Text(
-                        'Dòng thời gian',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.darkBackground,
+                        borderRadius: BorderRadius.circular(99),
                       ),
-                    ],
+                      child: const Row(
+                        children: [
+                          Icon(Icons.map_rounded, color: AppColors.gold, size: 16),
+                          SizedBox(width: 6),
+                          Text(
+                            'Bản đồ sự kiện',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -217,44 +224,81 @@ class _ErasScreenState extends State<ErasScreen> {
 
             const SizedBox(height: 18),
 
-            // Banner mốc thời gian (Thế kỷ 10)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: AppColors.darkBackground,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _currentEra.timelineSpan,
-                    style: const TextStyle(
-                      color: AppColors.gold,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
+            // Banner mốc thời gian (Thế kỷ 10) - Chạm để mở bản đồ board game
+            GestureDetector(
+              onTap: () => context.push('/eras/${_currentEra.id}'),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.darkBackground,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x203A2A1A),
+                      offset: Offset(0, 4),
+                      blurRadius: 10,
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Bạn đang ở đây · ${_currentEra.centuryTitle}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          _currentEra.timelineSpan,
+                          style: const TextStyle(
+                            color: AppColors.gold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Mở bản đồ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 10),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Còn ${_currentEra.totalEvents - _currentEra.completedEvents} sự kiện nữa là mở mốc tiếp theo',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
+                    const SizedBox(height: 6),
+                    Text(
+                      'Bạn đang ở đây · ${_currentEra.centuryTitle}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Còn ${_currentEra.totalEvents - _currentEra.completedEvents} sự kiện nữa là mở mốc tiếp theo',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -330,6 +374,17 @@ class _ErasScreenState extends State<ErasScreen> {
                     fontSize: 18,
                     icon: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 20),
                     onPressed: () => context.push('/quiz'),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  SecondaryButton(
+                    label: 'Bản đồ sự kiện (Board Game)',
+                    isFullWidth: true,
+                    height: 52,
+                    fontSize: 15,
+                    icon: const Icon(Icons.alt_route_rounded, color: AppColors.primaryDark, size: 20),
+                    onPressed: () => context.push('/eras/${_currentEra.id}'),
                   ),
                 ],
               ),
