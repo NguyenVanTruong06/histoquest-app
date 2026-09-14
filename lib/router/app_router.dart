@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../features/countries/presentation/country_select_screen.dart';
 import '../features/eras/presentation/eras_screen.dart';
 import '../features/eras/presentation/era_events_map_screen.dart';
 import '../features/eras/presentation/event_detail_screen.dart';
@@ -28,15 +27,12 @@ final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 GoRouter goRouter(Ref ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    // Màn 0 - Chọn quốc gia / nền văn minh, hiển thị TRƯỚC khi vào bản đồ
-    // thời kỳ. Đây là màn khởi đầu của app.
-    initialLocation: '/countries',
+    // App vào thẳng shell chính (Bản đồ / Bảng vàng / Trò chơi / Tin tức /
+    // Của tôi) ngay khi mở. Bước "chọn nền văn minh" không còn là màn hình
+    // chặn riêng TRƯỚC khi vào game nữa — nó là bước đầu tiên BÊN TRONG tab
+    // Bản đồ (xem ErasScreen), rồi mới tới bước chọn thời kỳ.
+    initialLocation: '/eras',
     routes: [
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/countries',
-        builder: (context, state) => const CountrySelectScreen(),
-      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);

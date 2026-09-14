@@ -16,6 +16,11 @@ class MockData {
 
   /// Danh sách các quốc gia / nền văn minh có thể chọn (mock — sẽ bổ sung
   /// dữ liệu thật cho Trung Quốc & Ai Cập sau).
+  ///
+  /// Cơ chế mở khóa: mỗi nền văn minh (trừ Việt Nam — nền văn minh khởi
+  /// đầu) chỉ mở khóa sau khi người chơi đạt đủ số mốc lịch sử yêu cầu ở
+  /// nền văn minh tiên quyết. Ví dụ: đạt mốc thứ 7 của Việt Nam sẽ mở khóa
+  /// Trung Quốc.
   static final List<CountryModel> countries = [
     const CountryModel(
       id: 'vn',
@@ -34,6 +39,10 @@ class MockData {
       icon: Icons.account_balance_rounded,
       accentColor: Color(0xFFC94747),
       hasContent: false,
+      requiresCountryId: 'vn',
+      requiresMilestoneCount: 7,
+      unlockHint:
+          'Mở khóa khi bạn đạt mốc lịch sử thứ 7 của nền văn minh Việt Nam.',
     ),
     const CountryModel(
       id: 'eg',
@@ -43,12 +52,36 @@ class MockData {
       icon: Icons.change_history_rounded,
       accentColor: Color(0xFFE4A93A),
       hasContent: false,
+      requiresCountryId: 'cn',
+      requiresMilestoneCount: 5,
+      unlockHint:
+          'Mở khóa khi bạn đạt mốc lịch sử thứ 5 của nền văn minh Trung Quốc.',
     ),
   ];
 
   /// Danh sách thời kỳ theo quốc gia đang được chọn
   static List<EraModel> get erasForSelectedCountry =>
       eras.where((e) => e.countryId == selectedCountryId).toList();
+
+  /// Tổng số mốc lịch sử (sự kiện) đã hoàn thành ở một nền văn minh — dùng
+  /// làm điều kiện mở khóa nền văn minh kế tiếp.
+  static int completedMilestonesForCountry(String countryId) {
+    return eras
+        .where((e) => e.countryId == countryId)
+        .expand((e) => e.events)
+        .where((ev) => ev.isCompleted)
+        .length;
+  }
+
+  /// Nền văn minh [country] đã được mở khóa hay chưa. Nền văn minh không có
+  /// điều kiện tiên quyết ([CountryModel.requiresCountryId] == null) luôn
+  /// mở sẵn.
+  static bool isCountryUnlocked(CountryModel country) {
+    final requiredId = country.requiresCountryId;
+    if (requiredId == null) return true;
+    final required = country.requiresMilestoneCount ?? 0;
+    return completedMilestonesForCountry(requiredId) >= required;
+  }
 
   /// Thông tin người dùng hiện tại
   static final UserModel currentUser = UserModel(
