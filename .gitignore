@@ -46,3 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Dev B Private Notes & Reports
+DEV_B_*.md

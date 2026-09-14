@@ -9,6 +9,9 @@ import '../features/ranks/presentation/ranks_screen.dart';
 import '../features/games/presentation/games_screen.dart';
 import '../features/social/presentation/social_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
+import '../features/quiz/presentation/quiz_screen.dart';
+import '../features/quiz/presentation/quiz_result_screen.dart';
+import '../data/models/historical_event_model.dart';
 import '../shared/widgets/scaffold_with_nav_bar.dart';
 
 part 'app_router.g.dart';
@@ -24,6 +27,10 @@ final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 GoRouter goRouter(Ref ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
+    // App vào thẳng shell chính (Bản đồ / Bảng vàng / Trò chơi / Tin tức /
+    // Của tôi) ngay khi mở. Bước "chọn nền văn minh" không còn là màn hình
+    // chặn riêng TRƯỚC khi vào game nữa — nó là bước đầu tiên BÊN TRONG tab
+    // Bản đồ (xem ErasScreen), rồi mới tới bước chọn thời kỳ.
     initialLocation: '/eras',
     routes: [
       StatefulShellRoute.indexedStack(
@@ -106,6 +113,30 @@ GoRouter goRouter(Ref ref) {
                 builder: (context, state) => const ProfileScreen(),
               ),
             ],
+          ),
+        ],
+      ),
+      // Màn 2 - Quiz toàn màn hình
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/quiz',
+        builder: (context, state) {
+          final event = state.extra as HistoricalEventModel?;
+          return QuizScreen(event: event);
+        },
+        routes: [
+          // Màn 3 - Kết quả Quiz
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: 'result',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>? ?? {};
+              return QuizResultScreen(
+                correctCount: extra['correctCount'] as int? ?? 0,
+                totalCount: extra['totalCount'] as int? ?? 3,
+                event: extra['event'] as HistoricalEventModel?,
+              );
+            },
           ),
         ],
       ),
