@@ -253,63 +253,68 @@ class _MancalaGameScreenState extends State<MancalaGameScreen> {
 
             const Divider(height: 1, color: Color(0xFFE2DDD2)),
 
-            // 2. Nội dung ván cờ cuộn linh hoạt
+            // 2. Nội dung ván cờ: landscape đặt bảng điểm + nút bên TRÁI
+            // (cuộn được), bàn cờ (vốn đã nằm ngang) chiếm phần rộng bên
+            // phải — thay vì xếp chồng dọc như bản gốc portrait.
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                child: Column(
-                  children: [
-                    // Bảng điểm & chỉ số lượt chơi
-                    MancalaScoreboard(
-                      playerScore: _engine.playerScore,
-                      aiScore: _engine.aiScore,
-                      currentTurn: _engine.currentTurn,
-                      statusMessage: _engine.statusMessage,
-                    ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: 220,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                      child: Column(
+                        children: [
+                          // Bảng điểm & chỉ số lượt chơi
+                          MancalaScoreboard(
+                            playerScore: _engine.playerScore,
+                            aiScore: _engine.aiScore,
+                            currentTurn: _engine.currentTurn,
+                            statusMessage: _engine.statusMessage,
+                          ),
 
-                    const SizedBox(height: 24),
+                          const SizedBox(height: 16),
 
-                    // Bàn cờ Ô Ăn Quan 3D
-                    MancalaBoard(
-                      pits: _engine.pits,
-                      selectedPit: _selectedPit,
-                      isPlayerTurn: _engine.currentTurn == GameTurn.player,
-                      isMoving: _isMoving,
-                      onPitTap: _handlePitTap,
-                      onDirectionSelect: _handleDirectionSelect,
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    // Hàng nút tiện ích bên dưới
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SecondaryButton(
+                          // Nút tiện ích
+                          SecondaryButton(
                             label: 'Luật Chơi',
-                            height: 48,
+                            height: 46,
                             icon: const Icon(Icons.menu_book_rounded, color: AppColors.primaryDark, size: 18),
                             onPressed: _showRulesSheet,
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: PrimaryButton(
+                          const SizedBox(height: 10),
+                          PrimaryButton(
                             label: 'Tổng Kết Ván',
-                            height: 48,
+                            height: 46,
                             icon: const Icon(Icons.flag_rounded, color: Colors.white, size: 18),
                             onPressed: () {
                               _engine.endGame();
                               _showGameOverDialog();
                             },
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                  ),
 
-                    const SizedBox(height: 16),
-                  ],
-                ),
+                  // Bàn cờ Ô Ăn Quan 3D chiếm phần không gian rộng còn lại
+                  Expanded(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 20.0),
+                        child: MancalaBoard(
+                          pits: _engine.pits,
+                          selectedPit: _selectedPit,
+                          isPlayerTurn: _engine.currentTurn == GameTurn.player,
+                          isMoving: _isMoving,
+                          onPitTap: _handlePitTap,
+                          onDirectionSelect: _handleDirectionSelect,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

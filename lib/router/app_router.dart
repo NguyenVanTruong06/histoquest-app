@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../features/countries/presentation/country_select_screen.dart';
 import '../features/eras/presentation/eras_screen.dart';
 import '../features/eras/presentation/era_events_map_screen.dart';
 import '../features/eras/presentation/event_detail_screen.dart';
@@ -27,8 +28,15 @@ final _profileNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
 GoRouter goRouter(Ref ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/eras',
+    // Màn 0 - Chọn quốc gia / nền văn minh, hiển thị TRƯỚC khi vào bản đồ
+    // thời kỳ. Đây là màn khởi đầu của app.
+    initialLocation: '/countries',
     routes: [
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/countries',
+        builder: (context, state) => const CountrySelectScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);

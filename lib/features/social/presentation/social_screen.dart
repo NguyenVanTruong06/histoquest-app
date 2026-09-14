@@ -209,9 +209,16 @@ class _SocialScreenState extends State<SocialScreen> {
             await Future.delayed(const Duration(milliseconds: 600));
             if (mounted) setState(() {});
           },
+          // Landscape: giới hạn chiều rộng nội dung và căn giữa để banner
+          // và danh sách bài viết không bị kéo dãn quá rộng.
           child: ListView(
             padding: const EdgeInsets.only(bottom: 24),
             children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Column(
+                    children: [
               // Banner Sự kiện tuần nổi bật
               WeeklyEventBanner(
                 event: MockNewsData.weeklyEvent,
@@ -280,18 +287,50 @@ class _SocialScreenState extends State<SocialScreen> {
                   ),
                 )
               else
-                ..._filteredArticles.map((article) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
-                    child: NewsArticleCard(
-                      article: article,
-                      onTap: () => NewsDetailSheet.show(context, article),
-                    ),
-                  );
-                }),
+                // Landscape: xếp bài viết thành 2 cột cạnh nhau (thay vì 1
+                // cột dọc full-width) để tận dụng chiều rộng màn hình ngang.
+                // Vì chiều cao mỗi thẻ có thể khác nhau (tags tùy chọn),
+                // chia bài viết xen kẽ vào 2 cột thay vì dùng GridView cứng.
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < _filteredArticles.length; i += 2)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12, right: 6),
+                                child: NewsArticleCard(
+                                  article: _filteredArticles[i],
+                                  onTap: () => NewsDetailSheet.show(context, _filteredArticles[i]),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            for (int i = 1; i < _filteredArticles.length; i += 2)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12, left: 6),
+                                child: NewsArticleCard(
+                                  article: _filteredArticles[i],
+                                  onTap: () => NewsDetailSheet.show(context, _filteredArticles[i]),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         );

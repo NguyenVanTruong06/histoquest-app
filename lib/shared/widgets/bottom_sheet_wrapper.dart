@@ -48,7 +48,14 @@ class BottomSheetWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // Landscape: chiều cao màn hình eo hẹp hơn nhiều so với dọc, nên nội
+    // dung chính được đặt trong Flexible + cuộn được để không bao giờ
+    // tràn (overflow) nếu nội dung dài hơn không gian còn lại; đồng thời
+    // giới hạn chiều rộng tối đa để sheet không bị kéo dãn quá rộng.
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 640),
+        child: Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -131,10 +138,13 @@ class BottomSheetWrapper extends StatelessWidget {
                 const Divider(height: 1, color: AppColors.cardBorder),
               ],
 
-              // Main Body Content
-              Padding(
-                padding: contentPadding,
-                child: child,
+              // Main Body Content — bọc trong Flexible + cuộn để tránh
+              // tràn khi chiều cao màn hình ngang không đủ chứa hết nội dung.
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: contentPadding,
+                  child: child,
+                ),
               ),
 
               // Optional Bottom Action
@@ -147,6 +157,8 @@ class BottomSheetWrapper extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    ),
       ),
     );
   }

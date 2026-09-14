@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/theme/app_colors.dart';
 import '../../../data/mock_data.dart';
 import '../../../data/models/historical_event_model.dart';
@@ -47,7 +48,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
       duration: const Duration(milliseconds: 450),
     );
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.06),
+      begin: const Offset(0.04, 0),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
 
@@ -96,181 +97,194 @@ class _EventDetailScreenState extends State<EventDetailScreen>
     final event = _event!;
     final facts = _extractFacts(event.storyContent);
 
+    // Landscape: bố cục 2 cột kiểu master-detail thay vì 1 cột dọc dài với
+    // SliverAppBar cao — vừa tránh chiếm quá nhiều chiều cao vừa tận dụng
+    // chiều rộng màn hình ngang.
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: CustomScrollView(
-            slivers: [
-              _buildAppBar(event),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 24),
-
-                      // Giai đoạn lịch sử badge
-                      _buildEraBadge(),
-
-                      const SizedBox(height: 16),
-
-                      // Tiêu đề sự kiện
-                      Text(
-                        event.title,
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.6,
-                          height: 1.25,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Stat badges hàng ngang
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 6,
-                        children: [
-                          StatBadge.time('${event.estimatedMinutes} phút'),
-                          StatBadge.xp(event.xpReward),
-                          StatBadge.coin(event.coinReward),
-                          if (event.rewardCardName != null)
-                            StatBadge.reward(event.rewardCardName!),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Đường phân cách
-                      _buildDivider(),
-
-                      const SizedBox(height: 20),
-
-                      // Tóm tắt 2–3 câu
-                      _buildSectionTitle('📖 Tóm tắt bài học'),
-                      const SizedBox(height: 12),
-                      _buildSummaryCard(event.summary),
-
-                      const SizedBox(height: 24),
-
-                      // 3 Fact thú vị
-                      _buildSectionTitle('💡 Điều thú vị cần biết'),
-                      const SizedBox(height: 12),
-                      ...facts.asMap().entries.map(
-                        (entry) => _buildFactCard(entry.key, entry.value),
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      // Phần thưởng nổi bật nếu có thẻ
-                      if (event.rewardCardName != null) ...[
-                        _buildRewardPreview(event),
-                        const SizedBox(height: 28),
-                      ],
-
-                      // Nút Bắt đầu Quiz
-                      _buildStartButton(event),
-
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(width: 300, child: _buildHeroPanel(event)),
+                Expanded(child: _buildContentPanel(context, event, facts)),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildAppBar(HistoricalEventModel event) {
-    return SliverAppBar(
-      expandedHeight: 180,
-      pinned: true,
-      backgroundColor: AppColors.darkBackground,
-      leading: GestureDetector(
-        onTap: () => context.pop(),
-        child: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
+  Widget _buildHeroPanel(HistoricalEventModel event) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Gradient nền tối cổ kính
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF3D2B1F), AppColors.darkBackground],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
-          child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22),
         ),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Gradient nền tối cổ kính
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF3D2B1F), AppColors.darkBackground],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+        // Pattern trang trí
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.07,
+            child: Image.network(
+              'https://www.transparenttextures.com/patterns/old-map.png',
+              repeat: ImageRepeat.repeat,
+              errorBuilder: (_, _, _) => const SizedBox(),
+            ),
+          ),
+        ),
+        // Năm sự kiện to mờ ở nền
+        Positioned(
+          right: -6,
+          bottom: 8,
+          child: Text(
+            '${event.year}',
+            style: TextStyle(
+              fontSize: 64,
+              fontWeight: FontWeight.bold,
+              color: Colors.white.withValues(alpha: 0.1),
+              letterSpacing: -4,
+            ),
+          ),
+        ),
+        // Nút back
+        Positioned(
+          left: 12,
+          top: 12,
+          child: GestureDetector(
+            onTap: () => context.pop(),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                color: Colors.white,
+                size: 22,
               ),
             ),
-            // Pattern trang trí
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.07,
-                child: Image.network(
-                  'https://www.transparenttextures.com/patterns/old-map.png',
-                  repeat: ImageRepeat.repeat,
-                  errorBuilder: (_, __, ___) => const SizedBox(),
+          ),
+        ),
+        // Nội dung chính: năm + badge thời kỳ + tiêu đề sự kiện
+        Positioned(
+          left: 20,
+          right: 20,
+          bottom: 24,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
                 ),
-              ),
-            ),
-            // Năm sự kiện to ở góc phải
-            Positioned(
-              right: 20,
-              bottom: 24,
-              child: Text(
-                '${event.year}',
-                style: TextStyle(
-                  fontSize: 72,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white.withValues(alpha: 0.1),
-                  letterSpacing: -4,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ),
-            ),
-            // Nội dung chính
-            Positioned(
-              left: 20,
-              bottom: 20,
-              right: 100,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Năm ${event.year}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                child: Text(
+                  'Năm ${event.year}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
+                ),
               ),
+              const SizedBox(height: 12),
+              Text(
+                event.title,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContentPanel(
+    BuildContext context,
+    HistoricalEventModel event,
+    List<String> facts,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 640),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Giai đoạn lịch sử badge
+            _buildEraBadge(),
+
+            const SizedBox(height: 14),
+
+            // Stat badges hàng ngang
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                StatBadge.time('${event.estimatedMinutes} phút'),
+                StatBadge.xp(event.xpReward),
+                StatBadge.coin(event.coinReward),
+                if (event.rewardCardName != null)
+                  StatBadge.reward(event.rewardCardName!),
+              ],
             ),
+
+            const SizedBox(height: 20),
+
+            // Đường phân cách
+            _buildDivider(),
+
+            const SizedBox(height: 18),
+
+            // Tóm tắt 2–3 câu
+            _buildSectionTitle('📖 Tóm tắt bài học'),
+            const SizedBox(height: 10),
+            _buildSummaryCard(event.summary),
+
+            const SizedBox(height: 20),
+
+            // 3 Fact thú vị
+            _buildSectionTitle('💡 Điều thú vị cần biết'),
+            const SizedBox(height: 10),
+            ...facts.asMap().entries.map(
+              (entry) => _buildFactCard(entry.key, entry.value),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Phần thưởng nổi bật nếu có thẻ
+            if (event.rewardCardName != null) ...[
+              _buildRewardPreview(event),
+              const SizedBox(height: 20),
+            ],
+
+            // Nút Bắt đầu Quiz
+            _buildStartButton(event),
           ],
         ),
       ),
@@ -392,7 +406,9 @@ class _EventDetailScreenState extends State<EventDetailScreen>
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: iconColors[index % iconColors.length].withValues(alpha: 0.15),
+              color: iconColors[index % iconColors.length].withValues(
+                alpha: 0.15,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -446,7 +462,11 @@ class _EventDetailScreenState extends State<EventDetailScreen>
               ),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.card_membership_rounded, color: Colors.white, size: 26),
+            child: const Icon(
+              Icons.card_membership_rounded,
+              color: Colors.white,
+              size: 26,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -473,7 +493,11 @@ class _EventDetailScreenState extends State<EventDetailScreen>
               ],
             ),
           ),
-          const Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.goldDark),
+          const Icon(
+            Icons.lock_outline_rounded,
+            size: 18,
+            color: AppColors.goldDark,
+          ),
         ],
       ),
     );
@@ -504,10 +528,6 @@ class _EventDetailScreenState extends State<EventDetailScreen>
         .toList();
     if (sentences.length <= 3) return sentences;
     // Lấy câu 1, câu giữa và câu cuối để đa dạng
-    return [
-      sentences.first,
-      sentences[sentences.length ~/ 2],
-      sentences.last,
-    ];
+    return [sentences.first, sentences[sentences.length ~/ 2], sentences.last];
   }
 }

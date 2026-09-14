@@ -98,7 +98,13 @@ class AppModalDialog extends StatelessWidget {
       elevation: 10,
       backgroundColor: AppColors.surface,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Padding(
+      // Landscape: giới hạn chiều rộng để hộp thoại (dùng nút full-width)
+      // không bị kéo dãn quá rộng trên màn hình ngang; cho phép cuộn nếu
+      // nội dung cao hơn chiều cao màn hình ngang eo hẹp.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+        child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -190,6 +196,8 @@ class AppModalDialog extends StatelessWidget {
               ],
             ),
           ],
+        ),
+        ),
         ),
       ),
     );

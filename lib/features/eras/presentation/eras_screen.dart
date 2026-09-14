@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../data/models/country_model.dart';
 import '../../../data/models/era_model.dart';
-import '../../../data/models/historical_event_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/mock_data.dart';
-import '../../../data/repositories/history_repository.dart';
-import '../../../shared/widgets/primary_button.dart';
-import '../../../shared/widgets/secondary_button.dart';
 import '../../../shared/widgets/app_card.dart';
-import '../../../shared/widgets/stat_badge.dart';
-import '../../../shared/widgets/bottom_sheet_wrapper.dart';
-import '../../../shared/widgets/app_modal_dialog.dart';
+import '../../../shared/widgets/app_empty_view.dart';
 
 class ErasScreen extends StatefulWidget {
   const ErasScreen({super.key});
@@ -21,434 +16,270 @@ class ErasScreen extends StatefulWidget {
 }
 
 class _ErasScreenState extends State<ErasScreen> {
-  final HistoryRepository _repository = MockHistoryRepository();
-  UserModel _user = MockData.currentUser;
-  final EraModel _currentEra = MockData.eras.first;
-  late HistoricalEventModel _activeEvent;
+  final UserModel _user = MockData.currentUser;
 
-  @override
-  void initState() {
-    super.initState();
-    _activeEvent = _currentEra.events.firstWhere(
-      (e) => e.isCurrentActive,
-      orElse: () => _currentEra.events[1],
-    );
-  }
+  List<EraModel> get _eras => MockData.erasForSelectedCountry;
 
-  void _showDemoBottomSheet() {
-    BottomSheetWrapper.show(
-      context,
-      title: '${_activeEvent.year} · ${_activeEvent.title}',
-      subtitle: _activeEvent.summary,
-      bottomAction: PrimaryButton(
-        label: 'Vào học ngay',
-        isFullWidth: true,
-        icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
-        onPressed: () {
-          Navigator.pop(context);
-          context.push('/quiz');
-        },
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 150,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFD95D39), Color(0xFFA53B20)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.sailing_rounded,
-                size: 64,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Phần thưởng sự kiện:',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              StatBadge(type: StatType.xp, label: '+${_activeEvent.xpReward} XP'),
-              StatBadge(type: StatType.coin, label: '+${_activeEvent.coinReward} xu'),
-              if (_activeEvent.rewardCardName != null)
-                StatBadge(type: StatType.reward, label: _activeEvent.rewardCardName!),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            _activeEvent.storyContent,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDemoModalDialog() {
-    AppModalDialog.show(
-      context,
-      title: 'Nhận Thưởng Điểm Danh!',
-      message: 'Chúc mừng bạn đã duy trì chuỗi ${_user.streakDays} ngày thám hiểm lịch sử liên tiếp.',
-      type: DialogType.success,
-      icon: Icons.emoji_events_rounded,
-      confirmText: 'Nhận 100 Xu',
-      cancelText: 'Để sau',
-      onConfirm: () async {
-        final updatedUser = await _repository.addRewards(coins: 100, xp: 50);
-        if (mounted) {
-          setState(() {
-            _user = updatedUser;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: AppColors.primary,
-              content: Text('Đã nhận thành công 100 Xu & 50 XP!'),
-            ),
-          );
-        }
-      },
-    );
-  }
+  CountryModel get _selectedCountry => MockData.countries.firstWhere(
+        (c) => c.id == MockData.selectedCountryId,
+        orElse: () => MockData.countries.first,
+      );
 
   @override
   Widget build(BuildContext context) {
+    final country = _selectedCountry;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0.5,
         titleSpacing: 16,
-        title: const Text(
-          'HistoQuest',
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.5,
-            fontSize: 20,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'HistoQuest',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.5,
+                fontSize: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Nút đổi quốc gia / nền văn minh đang khám phá
+            InkWell(
+              onTap: () => context.go('/countries'),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFE5DFC9)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(country.flagEmoji, style: const TextStyle(fontSize: 13)),
+                    const SizedBox(width: 5),
+                    Text(
+                      country.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(width: 3),
+                    const Icon(Icons.unfold_more_rounded, size: 14, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
-            child: UserStatsRow(
-              xp: _user.xp,
-              coins: _user.coins,
-              streakDays: _user.streakDays,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE5DFC9)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.monetization_on_rounded, color: AppColors.gold, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${_user.coins}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary),
+                  ),
+                  const SizedBox(width: 12),
+                  const Icon(Icons.local_fire_department_rounded, color: Colors.deepOrange, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${_user.streakDays}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header chào mừng đúng như HistoQuest.html
-            Row(
+      body: _eras.isEmpty ? _buildEmptyState(country) : _buildErasGrid(),
+    );
+  }
+
+  Widget _buildEmptyState(CountryModel country) {
+    return AppEmptyView(
+      icon: Icons.hourglass_top_rounded,
+      title: 'Đang xây dựng nội dung ${country.name}',
+      message:
+          'Hiện tại chưa có dữ liệu lịch sử cho ${country.name}. Hãy quay lại chọn Việt Nam hoặc thử lại sau nhé!',
+      actionText: 'Chọn nền văn minh khác',
+      onActionPressed: () => context.go('/countries'),
+    );
+  }
+
+  Widget _buildErasGrid() {
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Chào ${_user.name}!',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Cấp ${_user.level} · ${_user.title}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                Text(
+                  'Chào ${_user.name}!',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => context.push('/eras/${_currentEra.id}'),
-                    borderRadius: BorderRadius.circular(99),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.darkBackground,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.map_rounded, color: AppColors.gold, size: 16),
-                          SizedBox(width: 6),
-                          Text(
-                            'Bản đồ sự kiện',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Chọn một thời kỳ để bắt đầu thám hiểm',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
+          sliver: SliverGrid(
+            // Landscape: màn hình rộng hơn cao, nên dùng lưới co giãn theo
+            // chiều rộng thay vì cố định 2 cột, và thẻ dẹt hơn (đỡ tốn chiều cao).
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 240,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.05,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final era = _eras[index];
+                return _buildEraCard(context, era);
+              },
+              childCount: _eras.length,
+            ),
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 30)),
+      ],
+    );
+  }
 
-            const SizedBox(height: 18),
+  Widget _buildEraCard(BuildContext context, EraModel era) {
+    final isUnlocked = era.isUnlocked;
 
-            // Banner mốc thời gian (Thế kỷ 10) - Chạm để mở bản đồ board game
-            GestureDetector(
-              onTap: () => context.push('/eras/${_currentEra.id}'),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: AppColors.darkBackground,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x203A2A1A),
-                      offset: Offset(0, 4),
-                      blurRadius: 10,
+    return GestureDetector(
+      onTap: () {
+        if (isUnlocked) {
+          context.push('/eras/${era.id}');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Thời kỳ ${era.name} đang khóa!'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isUnlocked ? AppColors.cardBorderActive : AppColors.cardBorder,
+            width: isUnlocked ? 2.0 : 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2D2B2B).withValues(alpha: isUnlocked ? 0.14 : 0.06),
+              offset: const Offset(0, 8),
+              blurRadius: isUnlocked ? 24 : 16,
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 3,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isUnlocked ? AppColors.primary : Colors.grey.shade300,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      isUnlocked ? Icons.account_balance_rounded : Icons.lock_rounded,
+                      size: 48,
+                      color: isUnlocked ? Colors.white : Colors.grey.shade500,
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          _currentEra.timelineSpan,
-                          style: const TextStyle(
-                            color: AppColors.gold,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Mở bản đồ',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 10),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Bạn đang ở đây · ${_currentEra.centuryTitle}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Còn ${_currentEra.totalEvents - _currentEra.completedEvents} sự kiện nữa là mở mốc tiếp theo',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Card sự kiện chính: 938 · Chiến thắng Bạch Đằng
-            AppCard(
-              isActive: true,
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header badge row
-                  Row(
+              Expanded(
+                flex: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const StatBadge(type: StatType.ongoing, label: 'HỌC TIẾP'),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isUnlocked ? AppColors.surface : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: isUnlocked ? const Color(0xFFE5DFC9) : Colors.transparent),
+                        ),
+                        child: Text(
+                          isUnlocked ? 'Đã mở' : 'Đang khóa',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: isUnlocked ? AppColors.primary : Colors.grey.shade600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        era.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isUnlocked ? AppColors.textPrimary : Colors.grey.shade600,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       const Spacer(),
                       Text(
-                        'Sự kiện 2 / ${_currentEra.totalEvents}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
+                        era.centuryTitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isUnlocked ? AppColors.textSecondary : Colors.grey.shade500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    '${_activeEvent.year} · ${_activeEvent.title}',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(
-                    _activeEvent.summary,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF4A443D),
-                      height: 1.4,
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Badges list
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      StatBadge(type: StatType.time, label: '${_activeEvent.estimatedMinutes} phút'),
-                      StatBadge(type: StatType.xp, label: '+${_activeEvent.xpReward} XP'),
-                      StatBadge(type: StatType.coin, label: '+${_activeEvent.coinReward} xu'),
-                      if (_activeEvent.rewardCardName != null)
-                        StatBadge(type: StatType.reward, label: '${_activeEvent.rewardCardName} nếu 3⭐'),
-                    ],
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  PrimaryButton(
-                    label: 'Bắt đầu học',
-                    isFullWidth: true,
-                    height: 58,
-                    fontSize: 18,
-                    icon: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 20),
-                    onPressed: () => context.push('/quiz'),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  SecondaryButton(
-                    label: 'Bản đồ sự kiện (Board Game)',
-                    isFullWidth: true,
-                    height: 52,
-                    fontSize: 15,
-                    icon: const Icon(Icons.alt_route_rounded, color: AppColors.primaryDark, size: 20),
-                    onPressed: () => context.push('/eras/${_currentEra.id}'),
-                  ),
-                ],
+                ),
               ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Section: Thành phẩm Reusable UI Kit của Dev B
-            const Text(
-              'Thành Phẩm UI Kit (Dev B)',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            AppCard(
-              title: 'Thử Nghiệm Component Dùng Chung',
-              subtitle: 'Bottom Sheet Wrapper & Modal Popup',
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: PrimaryButton(
-                          label: 'Mở Bottom Sheet',
-                          icon: const Icon(Icons.vertical_align_top_rounded, color: Colors.white, size: 18),
-                          onPressed: _showDemoBottomSheet,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SecondaryButton(
-                          label: 'Mở Modal Popup',
-                          icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.primaryDark, size: 18),
-                          onPressed: _showDemoModalDialog,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Row(
-                    children: [
-                      Expanded(
-                        child: PrimaryButton(
-                          label: 'Nút đang tải (Loading)...',
-                          isLoading: true,
-                          onPressed: null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -8,6 +8,8 @@ class EraModel {
   final String description;
   final bool isUnlocked;
   final List<HistoricalEventModel> events;
+  /// Quốc gia / nền văn minh mà thời kỳ này thuộc về (vd: 'vn', 'cn', 'eg').
+  final String countryId;
 
   const EraModel({
     required this.id,
@@ -17,6 +19,7 @@ class EraModel {
     required this.description,
     this.isUnlocked = true,
     this.events = const [],
+    this.countryId = 'vn',
   });
 
   int get totalEvents => events.length;
@@ -31,6 +34,7 @@ class EraModel {
     String? description,
     bool? isUnlocked,
     List<HistoricalEventModel>? events,
+    String? countryId,
   }) {
     return EraModel(
       id: id ?? this.id,
@@ -40,6 +44,7 @@ class EraModel {
       description: description ?? this.description,
       isUnlocked: isUnlocked ?? this.isUnlocked,
       events: events ?? this.events,
+      countryId: countryId ?? this.countryId,
     );
   }
 
@@ -52,6 +57,7 @@ class EraModel {
       'description': description,
       'isUnlocked': isUnlocked,
       'events': events.map((e) => e.toJson()).toList(),
+      'countryId': countryId,
     };
   }
 
@@ -67,6 +73,7 @@ class EraModel {
               ?.map((e) => HistoricalEventModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      countryId: json['countryId'] as String? ?? 'vn',
     );
   }
 }

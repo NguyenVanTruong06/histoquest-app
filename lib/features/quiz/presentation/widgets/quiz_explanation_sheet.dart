@@ -3,6 +3,12 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../data/models/quiz_models.dart';
 import '../../../../shared/widgets/primary_button.dart';
 
+/// Khung hiển thị giải thích đáp án + nút hành động (Kiểm tra / Tiếp tục).
+///
+/// Bản landscape: trước đây đây là một "bottom sheet" cố định đáy màn hình,
+/// rất tốn chiều cao vốn eo hẹp khi xoay ngang. Giờ được dùng như một
+/// panel bên PHẢI màn hình (đứng cạnh câu hỏi thay vì đè lên phía dưới),
+/// nên bo góc chuyển sang cạnh trái và cho phép cuộn nếu nội dung dài.
 class QuizExplanationSheet extends StatelessWidget {
   final AnswerStatus status;
   final bool isButtonEnabled;
@@ -33,89 +39,111 @@ class QuizExplanationSheet extends StatelessWidget {
 
     return Container(
       width: double.infinity,
+      height: double.infinity,
       decoration: BoxDecoration(
         color: containerBg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.horizontal(left: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
-            offset: const Offset(0, -4),
+            offset: const Offset(-4, 0),
           ),
         ],
       ),
       child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Khu vực Giải thích (Explanation) sau khi đã bấm Kiểm tra
-              if (isAnswered) ...[
-                Row(
+        left: false,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                      color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F),
-                      size: 28,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isCorrect ? 'Chính xác! 🎉' : 'Chưa đúng rồi! 💡',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F),
+                    if (isAnswered) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            isCorrect ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                            color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F),
+                            size: 28,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isCorrect ? 'Chính xác! 🎉' : 'Chưa đúng rồi! 💡',
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.bold,
+                                color: isCorrect ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
-                // Nội dung giải thích lịch sử
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isCorrect
-                          ? const Color(0xFF2E7D32).withValues(alpha: 0.25)
-                          : const Color(0xFFD32F2F).withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        currentItem.explanation,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                          height: 1.45,
-                        ),
-                      ),
-                      if (currentItem.funFact != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          currentItem.funFact!,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: isCorrect ? const Color(0xFF1B5E20) : const Color(0xFF8A5D12),
+                      // Nội dung giải thích lịch sử
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isCorrect
+                                ? const Color(0xFF2E7D32).withValues(alpha: 0.25)
+                                : const Color(0xFFD32F2F).withValues(alpha: 0.25),
                           ),
                         ),
-                      ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              currentItem.explanation,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                                height: 1.45,
+                              ),
+                            ),
+                            if (currentItem.funFact != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                currentItem.funFact!,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isCorrect ? const Color(0xFF1B5E20) : const Color(0xFF8A5D12),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      const Icon(Icons.lightbulb_outline_rounded, color: AppColors.gold, size: 32),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Chọn đáp án của bạn rồi bấm Kiểm tra',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          height: 1.4,
+                        ),
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-              ],
+              ),
+            ),
 
-              // Nút hành động: "KIỂM TRA" hoặc "TIẾP TỤC"
-              PrimaryButton(
+            // Nút hành động: "KIỂM TRA" hoặc "TIẾP TỤC" luôn cố định ở đáy panel
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              child: PrimaryButton(
                 label: isAnswered
                     ? (isLastQuestion ? 'Hoàn thành bài học' : 'Tiếp tục')
                     : 'Kiểm tra',
@@ -130,8 +158,8 @@ class QuizExplanationSheet extends StatelessWidget {
                     ? onContinue
                     : (isButtonEnabled ? onCheckAnswer : null),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,11 +1,54 @@
+import 'package:flutter/material.dart';
+
 import 'models/user_model.dart';
 import 'models/era_model.dart';
 import 'models/historical_event_model.dart';
 import 'models/hero_card_model.dart';
 import 'models/news_article_model.dart';
+import 'models/country_model.dart';
 
 class MockData {
   MockData._();
+
+  /// Quốc gia / nền văn minh mà người chơi đang chọn để khám phá.
+  /// Mặc định là Việt Nam vì đây là nội dung duy nhất có dữ liệu thật.
+  static String selectedCountryId = 'vn';
+
+  /// Danh sách các quốc gia / nền văn minh có thể chọn (mock — sẽ bổ sung
+  /// dữ liệu thật cho Trung Quốc & Ai Cập sau).
+  static final List<CountryModel> countries = [
+    const CountryModel(
+      id: 'vn',
+      name: 'Việt Nam',
+      subtitle: 'Rồng tiên · 4000 năm dựng nước và giữ nước',
+      flagEmoji: '🇻🇳',
+      icon: Icons.temple_buddhist_rounded,
+      accentColor: Color(0xFFD95D39),
+      hasContent: true,
+    ),
+    const CountryModel(
+      id: 'cn',
+      name: 'Trung Quốc',
+      subtitle: 'Vạn Lý Trường Thành · Các triều đại phong kiến',
+      flagEmoji: '🇨🇳',
+      icon: Icons.account_balance_rounded,
+      accentColor: Color(0xFFC94747),
+      hasContent: false,
+    ),
+    const CountryModel(
+      id: 'eg',
+      name: 'Ai Cập',
+      subtitle: 'Kim tự tháp · Nền văn minh sông Nile cổ đại',
+      flagEmoji: '🇪🇬',
+      icon: Icons.change_history_rounded,
+      accentColor: Color(0xFFE4A93A),
+      hasContent: false,
+    ),
+  ];
+
+  /// Danh sách thời kỳ theo quốc gia đang được chọn
+  static List<EraModel> get erasForSelectedCountry =>
+      eras.where((e) => e.countryId == selectedCountryId).toList();
 
   /// Thông tin người dùng hiện tại
   static final UserModel currentUser = UserModel(
@@ -77,15 +120,33 @@ class MockData {
   static final List<EraModel> eras = [
     const EraModel(
       id: 'era_1',
-      name: 'Thời kỳ Tự chủ & Đầu Độc Lập',
-      centuryTitle: 'Thế kỷ 10',
-      timelineSpan: 'Hành trình 500 → 1000',
-      description: 'Giai đoạn bản lề chấm dứt hơn 1000 năm Bắc thuộc, mở ra kỷ nguyên độc lập tự chủ lâu dài cho dân tộc.',
+      name: 'Thời kỳ Tiền sử',
+      centuryTitle: 'Nguồn cội',
+      timelineSpan: 'Trước 2879 TCN',
+      description: 'Giai đoạn bình minh của loài người, từ vượn người đến các nền văn hóa đồ đá, đồ đồng.',
+      isUnlocked: true,
+      events: [],
+    ),
+    const EraModel(
+      id: 'era_2',
+      name: 'Thời kỳ Cổ đại',
+      centuryTitle: 'Thế kỷ 3 TCN - Đầu SCN',
+      timelineSpan: '2879 TCN → 905 SCN',
+      description: 'Thời kỳ Hùng Vương dựng nước Văn Lang, Âu Lạc và hơn ngàn năm đấu tranh chống Bắc thuộc.',
+      isUnlocked: true,
+      events: [],
+    ),
+    const EraModel(
+      id: 'era_3',
+      name: 'Thời kỳ Trung đại',
+      centuryTitle: 'Thế kỷ 10 → 18',
+      timelineSpan: '905 → 1858',
+      description: 'Kỷ nguyên độc lập tự chủ rực rỡ với các triều đại Ngô, Đinh, Tiền Lê, Lý, Trần, Hậu Lê, Tây Sơn.',
       isUnlocked: true,
       events: [
         HistoricalEventModel(
           id: 'event_905',
-          eraId: 'era_1',
+          eraId: 'era_3',
           year: 905,
           title: 'Khúc Thừa Dụ xưng Tiết độ sứ',
           summary: 'Mở đầu thời kỳ độc lập tự chủ của người Việt sau ngàn năm lệ thuộc phương Bắc.',
@@ -98,7 +159,7 @@ class MockData {
         ),
         HistoricalEventModel(
           id: 'event_938',
-          eraId: 'era_1',
+          eraId: 'era_3',
           year: 938,
           title: 'Chiến thắng Bạch Đằng',
           summary: 'Đọc 3 điều thú vị, rồi thử 4 câu hỏi vui về kế sách cắm cọc sông Bạch Đằng của Ngô Quyền.',
@@ -156,7 +217,7 @@ class MockData {
         ),
         HistoricalEventModel(
           id: 'event_968',
-          eraId: 'era_1',
+          eraId: 'era_3',
           year: 968,
           title: 'Đinh Bộ Lĩnh dẹp loạn 12 sứ quân',
           summary: 'Thống nhất sơn hà, đặt quốc hiệu Đại Cồ Việt và định đô tại Hoa Lư hiểm trở.',
@@ -171,7 +232,7 @@ class MockData {
         ),
         HistoricalEventModel(
           id: 'event_981',
-          eraId: 'era_1',
+          eraId: 'era_3',
           year: 981,
           title: 'Lê Hoàn kháng Tống lần thứ nhất',
           summary: 'Thái hậu Dương Vân Nga trao áo long bào, Lê Hoàn chỉ huy quân dân đánh tan quân Tống.',
@@ -183,19 +244,9 @@ class MockData {
           isCompleted: false,
           isMajorMilestone: true,
         ),
-      ],
-    ),
-    const EraModel(
-      id: 'era_2',
-      name: 'Triều Lý - Trần: Hưng Thịnh & Chống Ngoại Xâm',
-      centuryTitle: 'Thế kỷ 11 → 14',
-      timelineSpan: 'Hành trình 1009 → 1400',
-      description: 'Thời kỳ đỉnh cao của văn hóa Thăng Long, tinh thần Diên Hồng và ba lần đại phá vó ngựa Mông Cổ.',
-      isUnlocked: true,
-      events: [
         HistoricalEventModel(
           id: 'event_1010',
-          eraId: 'era_2',
+          eraId: 'era_3',
           year: 1010,
           title: 'Lý Thái Tổ dời đô về Thăng Long',
           summary: 'Chiếu dời đô và rồng vàng bay lên, khai sinh mảnh đất kinh đô nghìn năm văn vật.',
@@ -204,11 +255,11 @@ class MockData {
           estimatedMinutes: 4,
           xpReward: 90,
           coinReward: 30,
-          isCompleted: true,
+          isCompleted: false,
         ),
         HistoricalEventModel(
           id: 'event_1077',
-          eraId: 'era_2',
+          eraId: 'era_3',
           year: 1077,
           title: 'Chiến tuyến sông Như Nguyệt',
           summary: 'Lý Thường Kiệt và bản tuyên ngôn "Nam quốc sơn hà" vang vọng lòng hào lũy.',
@@ -220,44 +271,34 @@ class MockData {
           rewardCardName: 'Thẻ Lý Thường Kiệt 4⭐',
           isCompleted: false,
         ),
-        HistoricalEventModel(
-          id: 'event_1288',
-          eraId: 'era_2',
-          year: 1288,
-          title: 'Đại thắng Bạch Đằng lần 3',
-          summary: 'Hưng Đạo Vương Trần Quốc Tuấn bắt sống Ô Mã Nhi, vùi xác đạo thủy binh Nguyên Mông.',
-          storyContent:
-              'Kế thừa kế sách cọc ngầm của Ngô Quyền, Trần Hưng Đạo đã tổ chức mai phục tiêu diệt hoàn toàn cánh quân thủy của Ô Mã Nhi và Phàn Tiếp trên sông Bạch Đằng, kết thúc thắng lợi 3 lần kháng chiến chống Nguyên Mông.',
-          estimatedMinutes: 7,
-          xpReward: 150,
-          coinReward: 50,
-          rewardCardName: 'Thẻ Trần Hưng Đạo 5⭐',
-          isCompleted: false,
-        ),
       ],
     ),
     const EraModel(
-      id: 'era_3',
-      name: 'Khởi Nghĩa Lam Sơn & Hậu Lê',
-      centuryTitle: 'Thế kỷ 15',
-      timelineSpan: 'Hành trình 1418 → 1527',
-      description: 'Mười năm nếm mật nằm gai, Lê Lợi và Nguyễn Trãi lãnh đạo kháng chiến chống quân Minh thắng lợi.',
+      id: 'era_4',
+      name: 'Thời kỳ Cận đại',
+      centuryTitle: 'Thế kỷ 19 → Nửa đầu 20',
+      timelineSpan: '1858 → 1945',
+      description: 'Thời kỳ thực dân Pháp xâm lược và cuộc đấu tranh giải phóng dân tộc dẫn đến Cách mạng tháng Tám.',
       isUnlocked: false,
-      events: [
-        HistoricalEventModel(
-          id: 'event_1427',
-          eraId: 'era_3',
-          year: 1427,
-          title: 'Đại thắng Chi Lăng - Xương Giang',
-          summary: 'Liễu Thăng mất đầu tại Chi Lăng, 10 vạn viện binh giặc bị quét sạch.',
-          storyContent:
-              'Chiến thắng quyết định tại ải Chi Lăng chém đầu Liễu Thăng, buộc Vương Thông phải ký hòa ước rút quân, Nguyễn Trãi chấp bút thiên cổ hùng văn Bình Ngô Đại Cáo.',
-          estimatedMinutes: 6,
-          xpReward: 140,
-          coinReward: 45,
-          isCompleted: false,
-        ),
-      ],
+      events: [],
+    ),
+    const EraModel(
+      id: 'era_5',
+      name: 'Thời kỳ Hiện đại',
+      centuryTitle: 'Nửa sau Thế kỷ 20',
+      timelineSpan: '1945 → 1975',
+      description: 'Ba mươi năm kháng chiến trường kỳ bảo vệ nền độc lập và thống nhất đất nước.',
+      isUnlocked: false,
+      events: [],
+    ),
+    const EraModel(
+      id: 'era_6',
+      name: 'Thời kỳ Đương đại',
+      centuryTitle: 'Từ 1975 đến nay',
+      timelineSpan: '1975 → Hiện tại',
+      description: 'Khắc phục hậu quả chiến tranh, đổi mới và hội nhập quốc tế.',
+      isUnlocked: false,
+      events: [],
     ),
   ];
 

@@ -63,8 +63,13 @@ class MancalaResultDialog extends StatelessWidget {
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: ConstrainedBox(
+        // Landscape: màn hình ngang rộng hơn nhiều so với dọc, nếu không
+        // giới hạn chiều rộng thì hộp thoại (vốn dùng nút full-width) sẽ
+        // bị kéo dãn rất xấu. Giới hạn 420 và cho phép cuộn nếu quá cao.
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -78,6 +83,7 @@ class MancalaResultDialog extends StatelessWidget {
             ),
           ],
         ),
+        child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -278,6 +284,8 @@ class MancalaResultDialog extends StatelessWidget {
               },
             ),
           ],
+        ),
+        ),
         ),
       ),
     );

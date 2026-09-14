@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -244,6 +246,11 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final screenWidth = constraints.maxWidth;
+                  // Landscape: màn hình có thể rất rộng, nên giới hạn bề rộng
+                  // "bàn cờ" để các node không bị dạt quá xa nhau theo chiều
+                  // ngang; phần dư ra hai bên chỉ là nền.
+                  final mapWidth = math.min(screenWidth, 640.0);
+                  final mapLeftOffset = (screenWidth - mapWidth) / 2;
                   const itemHeight = 175.0;
                   const topOffset = 70.0;
                   final totalMapHeight = topOffset + (events.length * itemHeight) + 120.0;
@@ -253,7 +260,7 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
                   for (int i = 0; i < events.length; i++) {
                     // Xen kẽ các mốc lệch trái (30%) và lệch phải (70%)
                     final double xRatio = (i % 2 == 0) ? 0.32 : 0.68;
-                    final double x = screenWidth * xRatio;
+                    final double x = mapLeftOffset + (mapWidth * xRatio);
                     final double y = topOffset + (i * itemHeight);
                     nodePositions.add(Offset(x, y));
                   }
@@ -320,7 +327,7 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
 
                           // 2.4. Cột mốc kết thúc chặng (Rương kho báu / Kỷ nguyên kế)
                           Positioned(
-                            left: (screenWidth / 2) - 85,
+                            left: mapLeftOffset + (mapWidth / 2) - 85,
                             top: totalMapHeight - 110,
                             child: _buildEraEndCheckpoint(),
                           ),
