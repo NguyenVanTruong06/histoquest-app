@@ -47,44 +47,26 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      // Landscape: tách thành 2 cột cuộn độc lập thay vì 1 cột dọc rất dài —
-      // cột trái (thông tin cá nhân, chuỗi ngày, thành tựu) và cột phải
-      // (bảo tàng thẻ bài, lưới nhiều cột hơn để tận dụng chiều rộng).
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            flex: 5,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProfileHeader(user),
-                  const SizedBox(height: 16),
-                  _buildStreakSection(user),
-                  const SizedBox(height: 16),
-                  _buildAchievementsSection(),
-                ],
-              ),
-            ),
-          ),
-          const VerticalDivider(width: 1, color: Color(0xFFEBE5D9)),
-          Expanded(
-            flex: 6,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(8, 12, 16, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCardMuseumHeader(),
-                  _buildCardMuseumGrid(cards),
-                  const SizedBox(height: 30),
-                ],
-              ),
-            ),
-          ),
-        ],
+      // Portrait: một cột dọc duy nhất, cuộn được toàn bộ — thông tin cá
+      // nhân, chuỗi ngày, thành tựu, rồi tới bảo tàng thẻ bài. (Có một bản
+      // landscape cũ tách thành 2 cột cuộn độc lập cạnh nhau để tận dụng
+      // chiều rộng màn hình ngang — đã bỏ vì app hiện khóa portrait.)
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildProfileHeader(user),
+            const SizedBox(height: 16),
+            _buildStreakSection(user),
+            const SizedBox(height: 16),
+            _buildAchievementsSection(),
+            const SizedBox(height: 20),
+            _buildCardMuseumHeader(),
+            _buildCardMuseumGrid(cards),
+            const SizedBox(height: 30),
+          ],
+        ),
       ),
     );
   }

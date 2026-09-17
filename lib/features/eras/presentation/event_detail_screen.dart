@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/year_format.dart';
 import '../../../data/mock_data.dart';
 import '../../../data/models/historical_event_model.dart';
 import '../../../shared/widgets/primary_button.dart';
@@ -97,9 +98,10 @@ class _EventDetailScreenState extends State<EventDetailScreen>
     final event = _event!;
     final facts = _extractFacts(event.storyContent);
 
-    // Landscape: bố cục 2 cột kiểu master-detail thay vì 1 cột dọc dài với
-    // SliverAppBar cao — vừa tránh chiếm quá nhiều chiều cao vừa tận dụng
-    // chiều rộng màn hình ngang.
+    // Portrait: banner hero cố định chiều cao ở trên, nội dung cuộn được
+    // bên dưới chiếm phần còn lại. (Có một bản landscape cũ dùng bố cục 2
+    // cột kiểu master-detail cạnh nhau để tận dụng chiều rộng màn hình
+    // ngang — đã bỏ vì app hiện khóa portrait.)
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -107,10 +109,10 @@ class _EventDetailScreenState extends State<EventDetailScreen>
           opacity: _fadeAnimation,
           child: SlideTransition(
             position: _slideAnimation,
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(width: 300, child: _buildHeroPanel(event)),
+                SizedBox(height: 260, child: _buildHeroPanel(event)),
                 Expanded(child: _buildContentPanel(context, event, facts)),
               ],
             ),
@@ -150,7 +152,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
           right: -6,
           bottom: 8,
           child: Text(
-            '${event.year}',
+            formatHistoricalYear(event.year),
             style: TextStyle(
               fontSize: 64,
               fontWeight: FontWeight.bold,
@@ -198,7 +200,7 @@ class _EventDetailScreenState extends State<EventDetailScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Năm ${event.year}',
+                  'Năm ${formatHistoricalYear(event.year)}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,

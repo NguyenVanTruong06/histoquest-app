@@ -14,10 +14,10 @@ const _kImmersiveMode = SystemUiMode.immersiveSticky;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Khóa toàn bộ app ở chế độ màn hình ngang (landscape).
+  // Khóa toàn bộ app ở chế độ màn hình dọc (portrait).
   await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
   ]);
 
   // Ẩn thanh trạng thái + thanh điều hướng/gesture bar của Android.

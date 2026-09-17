@@ -11,6 +11,11 @@ class CountryModel {
   final Color accentColor;
   final bool hasContent;
 
+  /// Đường dẫn asset ảnh banner 16:9 hiển thị trên thẻ chọn nền văn minh
+  /// (Bước 1 của tab Bản đồ). `null` nghĩa là chưa có ảnh — UI sẽ tự
+  /// dùng gradient [accentColor] kết hợp [icon] để thay thế.
+  final String? assetImagePath;
+
   /// Id của nền văn minh cần chinh phục trước để mở khóa nền văn minh này.
   /// `null` nghĩa là không có điều kiện tiên quyết (mở sẵn ngay từ đầu).
   final String? requiresCountryId;
@@ -31,6 +36,7 @@ class CountryModel {
     required this.icon,
     required this.accentColor,
     this.hasContent = true,
+    this.assetImagePath,
     this.requiresCountryId,
     this.requiresMilestoneCount,
     this.unlockHint,

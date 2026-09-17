@@ -5,9 +5,11 @@ import '../../../../shared/widgets/stat_badge.dart';
 
 /// Header đỉnh cho Màn hình Bản đồ Sự kiện (Bước 2)
 ///
-/// Bản landscape: gộp 2 hàng (back+stats, tiêu đề+tiến trình) thành 1 hàng
-/// duy nhất để tiết kiệm chiều cao vốn eo hẹp khi xoay ngang, tận dụng
-/// chiều rộng dư ra thay vào đó.
+/// Portrait: chia thành 2 hàng — hàng 1 (nút back + stats XP/xu/streak),
+/// hàng 2 (tiêu đề thời kỳ + tiến trình). (Có một bản landscape cũ gộp cả
+/// 2 hàng này thành 1 hàng duy nhất để tận dụng chiều rộng màn hình ngang —
+/// đã bỏ vì app hiện khóa portrait và 1 hàng duy nhất quá chật trên màn
+/// hình dọc hẹp.)
 class EraMapHeader extends StatelessWidget {
   final EraModel era;
   final int completedCount;
@@ -48,120 +50,127 @@ class EraMapHeader extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Nút quay lại bo góc 3D
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onBack,
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE0DCD3), width: 1.5),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x153A2A1A),
-                      offset: Offset(0, 2),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: AppColors.textPrimary,
-                  size: 22,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 14),
-
-          // Tiêu đề thời kỳ
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  era.centuryTitle.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
-                    letterSpacing: 1.0,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  era.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Chỉ số tiến độ & thanh mini
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$completedCount / $totalCount sự kiện',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Container(
-                width: 100,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE5DFC9),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: progress.clamp(0.0, 1.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFF3BF4B), Color(0xFFE4A93A)],
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(width: 20),
-
-          // Hàng Stats Gamification: XP, Xu, Lửa Streak
+          // Hàng 1: nút back + stats Gamification (XP, Xu, Lửa Streak)
           Row(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Nút quay lại bo góc 3D
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onBack,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE0DCD3), width: 1.5),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x153A2A1A),
+                          offset: Offset(0, 2),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: AppColors.textPrimary,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ),
+
+              const Spacer(),
+
+              // Hàng Stats Gamification: XP, Xu, Lửa Streak
               StatBadge(type: StatType.xp, label: '$userXp'),
               const SizedBox(width: 6),
               StatBadge(type: StatType.coin, label: '$userCoins'),
               const SizedBox(width: 6),
               StatBadge(type: StatType.streak, label: '$streakDays'),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Hàng 2: tiêu đề thời kỳ + chỉ số tiến độ
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Tiêu đề thời kỳ
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      era.centuryTitle.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      era.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              // Chỉ số tiến độ & thanh mini
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$completedCount / $totalCount sự kiện',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Container(
+                    width: 100,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE5DFC9),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: progress.clamp(0.0, 1.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFF3BF4B), Color(0xFFE4A93A)],
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ],

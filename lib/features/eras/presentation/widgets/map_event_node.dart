@@ -1,13 +1,20 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/year_format.dart';
 import '../../../../data/models/historical_event_model.dart';
 import 'star_clipper.dart';
 
-/// Loại Node sự kiện trên bản đồ
+/// Loại Node sự kiện trên bản đồ.
+///
+/// Cứ 3 mốc con (minorCircle) liên tiếp thì mốc thứ 3 trở thành mốc lớn
+/// (majorStar); mốc cuối cùng của thời đại luôn là Boss (bossShield), bất
+/// kể có rơi đúng vào bội số của 3 hay không. Xem `EraEventsMapScreen` cho
+/// logic tính toán.
 enum MapNodeType {
-  majorStar,   // Mốc lớn (Ngôi sao 5 cánh)
-  minorCircle, // Mốc phụ (Vòng tròn)
+  majorStar, // Mốc lớn — cứ 3 mốc con thì 1 mốc lớn (ngôi sao 6 cánh, vàng)
+  minorCircle, // Mốc phụ (vòng tròn, primary)
+  bossShield, // Mốc cuối cùng của thời đại — quiz tổng hợp (khiên, đỏ đậm)
 }
 
 /// Trạng thái hiển thị của Node sự kiện
@@ -113,10 +120,20 @@ class _MapEventNodeState extends State<MapEventNode>
     }
   }
 
+  double get _nodeSize {
+    switch (widget.nodeType) {
+      case MapNodeType.bossShield:
+        return 88.0;
+      case MapNodeType.majorStar:
+        return 72.0;
+      case MapNodeType.minorCircle:
+        return 56.0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isMajor = widget.nodeType == MapNodeType.majorStar;
-    final nodeSize = isMajor ? 84.0 : 68.0;
+    final nodeSize = _nodeSize;
 
     return AnimatedBuilder(
       animation: _shakeAnimation,
@@ -148,7 +165,7 @@ class _MapEventNodeState extends State<MapEventNode>
 
           const SizedBox(height: 6),
 
-          // 2. Thân Node chính (Ngôi sao hoặc Vòng tròn 3D)
+          // 2. Thân Node chính (Khiên / Ngôi sao / Vòng tròn 3D)
           GestureDetector(
             onTap: _handleTap,
             child: Stack(
@@ -160,18 +177,19 @@ class _MapEventNodeState extends State<MapEventNode>
                   AnimatedBuilder(
                     animation: _pulseAnimation,
                     builder: (context, child) {
+                      final isRound = widget.nodeType == MapNodeType.minorCircle;
                       return Transform.scale(
                         scale: _pulseAnimation.value,
                         child: Container(
                           width: nodeSize + 24,
                           height: nodeSize + 24,
                           decoration: BoxDecoration(
-                            shape: isMajor ? BoxShape.rectangle : BoxShape.circle,
-                            borderRadius: isMajor ? BorderRadius.circular(28) : null,
+                            shape: isRound ? BoxShape.circle : BoxShape.rectangle,
+                            borderRadius: isRound ? null : BorderRadius.circular(28),
                             gradient: RadialGradient(
                               colors: [
-                                AppColors.primary.withValues(alpha: 0.35),
-                                AppColors.primary.withValues(alpha: 0.0),
+                                _glowColor.withValues(alpha: 0.35),
+                                _glowColor.withValues(alpha: 0.0),
                               ],
                             ),
                           ),
@@ -180,11 +198,8 @@ class _MapEventNodeState extends State<MapEventNode>
                     },
                   ),
 
-                // Hình dáng Node 3D
-                if (isMajor)
-                  _buildMajorStarNode(nodeSize)
-                else
-                  _buildMinorCircleNode(nodeSize),
+                // Hình dáng Node 3D theo loại
+                _buildNodeShape(nodeSize),
               ],
             ),
           ),
@@ -198,18 +213,36 @@ class _MapEventNodeState extends State<MapEventNode>
     );
   }
 
+  /// Chọn hình dáng Node 3D tương ứng với [MapNodeType].
+  Widget _buildNodeShape(double size) {
+    switch (widget.nodeType) {
+      case MapNodeType.bossShield:
+        return _buildBossShieldNode(size);
+      case MapNodeType.majorStar:
+        return _buildMajorStarNode(size);
+      case MapNodeType.minorCircle:
+        return _buildMinorCircleNode(size);
+    }
+  }
+
+  Color get _glowColor {
+    if (widget.nodeType == MapNodeType.bossShield) return AppColors.danger;
+    return AppColors.primary;
+  }
+
   /// Tooltip bay nổi bật cho mốc Active
   Widget _buildActiveTooltip() {
+    final isBoss = widget.nodeType == MapNodeType.bossShield;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: isBoss ? AppColors.danger : AppColors.primary,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x35D95D39),
+            color: (isBoss ? AppColors.danger : AppColors.primary).withValues(alpha: 0.35),
             blurRadius: 8,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(color: Colors.white, width: 2),
@@ -217,10 +250,16 @@ class _MapEventNodeState extends State<MapEventNode>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 14),
+          Icon(
+            isBoss ? Icons.local_fire_department_rounded : Icons.play_arrow_rounded,
+            color: Colors.white,
+            size: 14,
+          ),
           const SizedBox(width: 4),
           Text(
-            widget.event.isCompleted ? 'ÔN TẬP' : 'BẮT ĐẦU',
+            isBoss
+                ? 'THỬ THÁCH BOSS'
+                : (widget.event.isCompleted ? 'ÔN TẬP' : 'BẮT ĐẦU'),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 11,
@@ -233,7 +272,7 @@ class _MapEventNodeState extends State<MapEventNode>
     );
   }
 
-  /// Dựng Mốc lớn (Ngôi sao 5 cánh 3D)
+  /// Dựng Mốc lớn (Ngôi sao 6 cánh 3D) — cứ 3 mốc con thì có 1 mốc lớn.
   Widget _buildMajorStarNode(double size) {
     Color topColor;
     Color bottomColor;
@@ -243,17 +282,17 @@ class _MapEventNodeState extends State<MapEventNode>
       case MapNodeState.completed:
         topColor = const Color(0xFFF0B33A);
         bottomColor = const Color(0xFFB57715);
-        centerIcon = const Icon(Icons.check_rounded, color: Colors.white, size: 36);
+        centerIcon = const Icon(Icons.check_rounded, color: Colors.white, size: 34);
         break;
       case MapNodeState.active:
-        topColor = AppColors.primary;
-        bottomColor = AppColors.primaryDark;
-        centerIcon = const Icon(Icons.star_rounded, color: Colors.white, size: 40);
+        topColor = AppColors.gold;
+        bottomColor = AppColors.goldDark;
+        centerIcon = const Icon(Icons.star_rounded, color: Colors.white, size: 36);
         break;
       case MapNodeState.locked:
         topColor = const Color(0xFFCCCCCC);
         bottomColor = const Color(0xFF9E9E9E);
-        centerIcon = const Icon(Icons.lock_rounded, color: Color(0xFF6E6E6E), size: 32);
+        centerIcon = const Icon(Icons.lock_rounded, color: Color(0xFF6E6E6E), size: 30);
         break;
     }
 
@@ -267,7 +306,7 @@ class _MapEventNodeState extends State<MapEventNode>
           Positioned(
             bottom: 0,
             child: ClipPath(
-              clipper: const StarClipper(innerRadiusRatio: 0.48),
+              clipper: const StarClipper(innerRadiusRatio: 0.55, points: 6),
               child: Container(
                 width: size,
                 height: size,
@@ -280,7 +319,7 @@ class _MapEventNodeState extends State<MapEventNode>
           Positioned(
             top: 0,
             child: ClipPath(
-              clipper: const StarClipper(innerRadiusRatio: 0.48),
+              clipper: const StarClipper(innerRadiusRatio: 0.55, points: 6),
               child: Container(
                 width: size,
                 height: size,
@@ -308,6 +347,78 @@ class _MapEventNodeState extends State<MapEventNode>
     );
   }
 
+  /// Dựng Mốc Boss (Khiên 3D đỏ đậm) — mốc cuối cùng của thời đại, quiz tổng.
+  Widget _buildBossShieldNode(double size) {
+    Color topColor;
+    Color bottomColor;
+    Widget centerIcon;
+
+    switch (widget.state) {
+      case MapNodeState.completed:
+        topColor = const Color(0xFFF0B33A);
+        bottomColor = const Color(0xFFB57715);
+        centerIcon = const Icon(Icons.check_rounded, color: Colors.white, size: 40);
+        break;
+      case MapNodeState.active:
+        topColor = AppColors.danger;
+        bottomColor = const Color(0xFF7A2323);
+        centerIcon = const Icon(Icons.shield_rounded, color: Colors.white, size: 42);
+        break;
+      case MapNodeState.locked:
+        topColor = const Color(0xFFCCCCCC);
+        bottomColor = const Color(0xFF9E9E9E);
+        centerIcon = const Icon(Icons.lock_rounded, color: Color(0xFF6E6E6E), size: 34);
+        break;
+    }
+
+    return SizedBox(
+      width: size,
+      height: size + 8, // Dư 8px cho bóng đổ đáy 3D
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          Positioned(
+            bottom: 0,
+            child: ClipPath(
+              clipper: const ShieldClipper(),
+              child: Container(
+                width: size,
+                height: size,
+                color: bottomColor,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            child: ClipPath(
+              clipper: const ShieldClipper(),
+              child: Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      topColor.withValues(alpha: 0.92),
+                      topColor,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 6.0),
+                    child: centerIcon,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Dựng Mốc phụ (Vòng tròn 3D phong cách nút HistoQuest)
   Widget _buildMinorCircleNode(double size) {
     Color topColor;
@@ -320,19 +431,19 @@ class _MapEventNodeState extends State<MapEventNode>
         topColor = const Color(0xFF4CAF50);
         bottomColor = const Color(0xFF2E7D32);
         rimBorderColor = const Color(0xFF81C784);
-        centerIcon = const Icon(Icons.check_rounded, color: Colors.white, size: 30);
+        centerIcon = const Icon(Icons.check_rounded, color: Colors.white, size: 26);
         break;
       case MapNodeState.active:
         topColor = AppColors.primary;
         bottomColor = AppColors.primaryDark;
         rimBorderColor = const Color(0xFFF28F72);
-        centerIcon = const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 32);
+        centerIcon = const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 28);
         break;
       case MapNodeState.locked:
         topColor = const Color(0xFFD4CEC3);
         bottomColor = const Color(0xFFA8A195);
         rimBorderColor = const Color(0xFFE8E4DC);
-        centerIcon = const Icon(Icons.lock_rounded, color: Color(0xFF757575), size: 26);
+        centerIcon = const Icon(Icons.lock_rounded, color: Color(0xFF757575), size: 22);
         break;
     }
 
@@ -378,22 +489,27 @@ class _MapEventNodeState extends State<MapEventNode>
   Widget _buildNodeInfoLabels() {
     final isLocked = widget.state == MapNodeState.locked;
     final isActive = widget.state == MapNodeState.active;
+    final isBoss = widget.nodeType == MapNodeType.bossShield;
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 150),
       child: Column(
         children: [
-          // Badge Năm sự kiện
+          // Badge Năm sự kiện (hoặc nhãn BOSS)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
               color: isLocked
                   ? const Color(0xFFDDD8CE)
-                  : (isActive ? AppColors.darkBackground : const Color(0xFF4A443D)),
+                  : (isBoss
+                      ? AppColors.danger
+                      : (isActive ? AppColors.darkBackground : const Color(0xFF4A443D))),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'Năm ${widget.event.year}',
+              isBoss
+                  ? 'BOSS · ${formatHistoricalYear(widget.event.year)}'
+                  : 'Năm ${formatHistoricalYear(widget.event.year)}',
               style: TextStyle(
                 color: isLocked ? const Color(0xFF7D776C) : Colors.white,
                 fontSize: 11,

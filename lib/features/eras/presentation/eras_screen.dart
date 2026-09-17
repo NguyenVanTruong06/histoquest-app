@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,12 +8,16 @@ import '../../../data/models/country_model.dart';
 import '../../../data/models/era_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/mock_data.dart';
+import 'widgets/country_page_card.dart';
+import 'widgets/era_vertical_item.dart';
 
 /// Màn hình gốc của tab "Bản đồ" (branch đầu tiên trong shell chính).
 ///
-/// Luồng: người chơi VÀO GAME trước (thấy shell chính với thanh điều hướng),
-/// rồi mới chọn nền văn minh, rồi mới chọn thời kỳ — thay vì phải chọn nền
-/// văn minh ở một màn hình chặn riêng TRƯỚC khi vào game như trước đây.
+/// Luồng chơi 3 bước liên tiếp:
+///   Bước 1 — PageView ngang snap từng thẻ chọn nền văn minh.
+///   Bước 2 — PageView dọc chọn thời kỳ, item trung tâm phóng to/nét, các
+///            item lân cận thu nhỏ/mờ/blur dần theo khoảng cách.
+///   Bước 3 — Bản đồ Kingdom Rush dọc (xem `EraEventsMapScreen`).
 ///
 /// Cơ chế mở khóa nền văn minh: mỗi nền văn minh (trừ nền văn minh khởi đầu)
 /// yêu cầu người chơi đạt một số mốc lịch sử nhất định ở nền văn minh tiên
@@ -34,6 +40,18 @@ class _ErasScreenState extends State<ErasScreen> {
   /// qua lại giữa các tab khác trong phiên chơi (nhờ IndexedStack của
   /// StatefulShellRoute), chỉ reset khi mở lại app.
   String? _activeCountryId;
+
+  late final PageController _countryPageController =
+      PageController(viewportFraction: 0.88);
+  late final PageController _eraPageController =
+      PageController(viewportFraction: 0.62);
+
+  @override
+  void dispose() {
+    _countryPageController.dispose();
+    _eraPageController.dispose();
+    super.dispose();
+  }
 
   List<EraModel> get _eras => MockData.eras
       .where((e) => e.countryId == _activeCountryId)
@@ -164,54 +182,96 @@ class _ErasScreenState extends State<ErasScreen> {
   }
 
   // ---------------------------------------------------------------------
-  // Bước 1: Chọn nền văn minh — bước đầu tiên trong tab Bản đồ.
+  // Bước 1: Chọn nền văn minh — PageView ngang snap từng thẻ.
   // ---------------------------------------------------------------------
   Widget _buildCountrySelectBody() {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Chọn một nền văn minh',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Chọn một nền văn minh',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Mỗi nền văn minh là một hành trình lịch sử riêng để bạn khám phá.',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppColors.textSecondary,
-                  ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Vuốt ngang để khám phá — mỗi nền văn minh là một hành trình lịch sử riêng.',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 260,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 0.92,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => _buildCountryCard(_countries[index]),
-              childCount: _countries.length,
-            ),
+        Expanded(
+          child: PageView.builder(
+            controller: _countryPageController,
+            physics: const PageScrollPhysics(),
+            itemCount: _countries.length,
+            padEnds: true,
+            itemBuilder: (context, index) {
+              final country = _countries[index];
+              return AnimatedBuilder(
+                animation: _countryPageController,
+                builder: (context, child) {
+                  double page = index.toDouble();
+                  if (_countryPageController.hasClients &&
+                      _countryPageController.position.haveDimensions) {
+                    page = _countryPageController.page ?? page;
+                  }
+                  final delta = (page - index).abs().clamp(0.0, 1.0);
+                  final scale = 1.0 - delta * 0.08;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                    child: Transform.scale(scale: scale, child: child),
+                  );
+                },
+                child: _buildCountryCard(country),
+              );
+            },
           ),
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: 30)),
+        const SizedBox(height: 14),
+        _buildDotIndicator(_countryPageController, _countries.length),
+        const SizedBox(height: 22),
       ],
+    );
+  }
+
+  Widget _buildDotIndicator(PageController controller, int count) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        double page = 0;
+        if (controller.hasClients && controller.position.haveDimensions) {
+          page = controller.page ?? 0;
+        }
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(count, (i) {
+            final delta = (page - i).abs().clamp(0.0, 1.0);
+            final isActive = delta < 0.5;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: isActive ? 22 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: isActive ? AppColors.primary : AppColors.cardBorder,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 
@@ -223,298 +283,103 @@ class _ErasScreenState extends State<ErasScreen> {
         requiredId == null ? 0 : MockData.completedMilestonesForCountry(requiredId);
     final active = unlocked && country.hasContent;
 
-    return GestureDetector(
+    return CountryPageCard(
+      country: country,
+      unlocked: unlocked,
+      active: active,
+      doneCount: doneCount,
+      requiredCount: requiredCount,
       onTap: () => _selectCountry(country),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: active ? country.accentColor : AppColors.cardBorder,
-            width: active ? 2.0 : 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF2D2B2B).withValues(alpha: active ? 0.14 : 0.06),
-              offset: const Offset(0, 8),
-              blurRadius: active ? 24 : 16,
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 3,
-                child: Container(
-                  color: unlocked ? country.accentColor : Colors.grey.shade400,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        unlocked ? country.icon : Icons.lock_rounded,
-                        size: 42,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                      Positioned(
-                        right: 10,
-                        top: 8,
-                        child: Text(
-                          country.flagEmoji,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(14.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: active ? AppColors.primaryLight : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          !unlocked
-                              ? 'Đang khóa · $doneCount/$requiredCount mốc'
-                              : (active ? 'Sẵn sàng khám phá' : 'Sắp ra mắt'),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: active ? AppColors.primary : Colors.grey.shade600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        country.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Expanded(
-                        child: Text(
-                          unlocked ? country.subtitle : (country.unlockHint ?? country.subtitle),
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            color: AppColors.textSecondary,
-                            height: 1.3,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
   // ---------------------------------------------------------------------
-  // Bước 2: Chọn thời kỳ — sau khi đã chọn nền văn minh ở bước 1.
+  // Bước 2: Chọn thời kỳ — PageView dọc, item trung tâm nổi bật, các item
+  // lân cận thu nhỏ/mờ/blur dần theo khoảng cách tới trang trung tâm.
   // ---------------------------------------------------------------------
   Widget _buildErasBody() {
     final eras = _eras;
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Chào ${_user.name}!',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Chọn một thời kỳ để bắt đầu thám hiểm',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18.0,
-            vertical: 8.0,
-          ),
-          sliver: SliverGrid(
-            // Landscape: màn hình rộng hơn cao, nên dùng lưới co giãn theo
-            // chiều rộng thay vì cố định 2 cột, và thẻ dẹt hơn (đỡ tốn chiều cao).
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 240,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 1.05,
-            ),
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final era = eras[index];
-              return _buildEraCard(context, era);
-            }, childCount: eras.length),
-          ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 30)),
-      ],
-    );
-  }
 
-  Widget _buildEraCard(BuildContext context, EraModel era) {
-    final isUnlocked = era.isUnlocked;
-
-    return GestureDetector(
-      onTap: () {
-        if (isUnlocked) {
-          context.push('/eras/${era.id}');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Thời kỳ ${era.name} đang khóa!'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isUnlocked
-                ? AppColors.cardBorderActive
-                : AppColors.cardBorder,
-            width: isUnlocked ? 2.0 : 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF2D2B2B)
-                  .withValues(alpha: isUnlocked ? 0.14 : 0.06),
-              offset: const Offset(0, 8),
-              blurRadius: isUnlocked ? 24 : 16,
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 8.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 3,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isUnlocked
-                        ? AppColors.primary
-                        : Colors.grey.shade300,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      isUnlocked
-                          ? Icons.account_balance_rounded
-                          : Icons.lock_rounded,
-                      size: 48,
-                      color: isUnlocked ? Colors.white : Colors.grey.shade500,
-                    ),
-                  ),
+              Text(
+                'Chào ${_user.name}!',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
               ),
-              Expanded(
-                flex: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isUnlocked
-                              ? AppColors.surface
-                              : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: isUnlocked
-                                ? const Color(0xFFE5DFC9)
-                                : Colors.transparent,
-                          ),
-                        ),
-                        child: Text(
-                          isUnlocked ? 'Đã mở' : 'Đang khóa',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: isUnlocked
-                                ? AppColors.primary
-                                : Colors.grey.shade600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        era.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isUnlocked
-                              ? AppColors.textPrimary
-                              : Colors.grey.shade600,
-                          height: 1.2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Spacer(),
-                      Text(
-                        era.centuryTitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isUnlocked
-                              ? AppColors.textSecondary
-                              : Colors.grey.shade500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+              const SizedBox(height: 4),
+              const Text(
+                'Vuốt dọc để chọn một thời kỳ, thời kỳ đang chọn sẽ được phóng to',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
         ),
-      ),
+        Expanded(
+          child: PageView.builder(
+            key: ValueKey(_activeCountryId),
+            controller: _eraPageController,
+            scrollDirection: Axis.vertical,
+            itemCount: eras.length,
+            itemBuilder: (context, index) {
+              final era = eras[index];
+              return AnimatedBuilder(
+                animation: _eraPageController,
+                builder: (context, _) {
+                  double page = index.toDouble();
+                  if (_eraPageController.hasClients &&
+                      _eraPageController.position.haveDimensions) {
+                    page = _eraPageController.page ?? page;
+                  }
+                  final delta = (page - index).abs().clamp(0.0, 1.0);
+                  final scale = 1.0 - delta * 0.15; // 1.0 tâm → 0.85 rìa
+                  final opacity = 1.0 - delta * 0.55; // 1.0 tâm → 0.45 rìa
+                  final blurSigma = delta * 3.0; // 0 tâm → 3.0 rìa
+                  final isCenter = delta < 0.5;
+
+                  Widget item = EraVerticalItem(
+                    era: era,
+                    isCenter: isCenter,
+                    onTap: () => context.push('/eras/${era.id}'),
+                    onLockedTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Thời kỳ ${era.name} đang khóa!'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    },
+                  );
+
+                  Widget content = Opacity(
+                    opacity: opacity.clamp(0.0, 1.0),
+                    child: Transform.scale(scale: scale, child: item),
+                  );
+
+                  if (blurSigma > 0.02) {
+                    content = ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+                      child: content,
+                    );
+                  }
+                  return content;
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

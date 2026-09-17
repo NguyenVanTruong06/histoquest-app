@@ -148,10 +148,11 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget _buildQuizView() {
     final currentItem = _questions[_currentIndex];
 
-    // Landscape: thay vì xếp Header / Câu hỏi / Ô giải thích thành 3 khối
-    // chồng dọc (rất tốn chiều cao khi màn hình ngang thấp), câu hỏi và ô
-    // giải thích được đặt CẠNH NHAU trong một Row bên dưới header, tận
-    // dụng chiều rộng dư ra thay vì chiều cao vốn eo hẹp.
+    // Portrait: Header / Câu hỏi / Ô giải thích xếp chồng dọc thành 3 khối
+    // — câu hỏi chiếm phần lớn không gian phía trên (cuộn được), panel giải
+    // thích + nút hành động luôn neo cố định ở đáy màn hình bên dưới. (Có
+    // một bản landscape cũ đặt 2 khối này CẠNH NHAU trong một Row để tận
+    // dụng chiều rộng màn hình ngang — đã bỏ vì app hiện khóa portrait.)
     return Column(
       children: [
         // Header thanh tiến trình và nút thoát
@@ -167,47 +168,40 @@ class _QuizScreenState extends State<QuizScreen> {
           },
         ),
 
+        // Thân câu hỏi có hiệu ứng trượt đổi câu mượt mà
         Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Thân câu hỏi có hiệu ứng trượt đổi câu mượt mà
-              Expanded(
-                flex: 3,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 280),
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0.05, 0.0),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: KeyedSubtree(
-                    key: ValueKey(currentItem.id),
-                    child: _buildQuestionContent(currentItem),
-                  ),
+          flex: 3,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.05, 0.0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
                 ),
-              ),
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey(currentItem.id),
+              child: _buildQuestionContent(currentItem),
+            ),
+          ),
+        ),
 
-              // Panel giải thích + nút hành động bên phải
-              SizedBox(
-                width: 340,
-                child: QuizExplanationSheet(
-                  status: _currentStatus,
-                  isButtonEnabled: _isButtonEnabled,
-                  isLastQuestion: _currentIndex == _questions.length - 1,
-                  currentItem: currentItem,
-                  onCheckAnswer: _checkAnswer,
-                  onContinue: _onContinue,
-                ),
-              ),
-            ],
+        // Panel giải thích + nút hành động luôn neo cố định ở đáy màn hình
+        Expanded(
+          flex: 2,
+          child: QuizExplanationSheet(
+            status: _currentStatus,
+            isButtonEnabled: _isButtonEnabled,
+            isLastQuestion: _currentIndex == _questions.length - 1,
+            currentItem: currentItem,
+            onCheckAnswer: _checkAnswer,
+            onContinue: _onContinue,
           ),
         ),
       ],

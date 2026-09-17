@@ -287,43 +287,22 @@ class _SocialScreenState extends State<SocialScreen> {
                   ),
                 )
               else
-                // Landscape: xếp bài viết thành 2 cột cạnh nhau (thay vì 1
-                // cột dọc full-width) để tận dụng chiều rộng màn hình ngang.
-                // Vì chiều cao mỗi thẻ có thể khác nhau (tags tùy chọn),
-                // chia bài viết xen kẽ vào 2 cột thay vì dùng GridView cứng.
+                // Portrait: xếp bài viết thành 1 cột dọc full-width. (Có
+                // một bản landscape cũ chia xen kẽ vào 2 cột cạnh nhau để
+                // tận dụng chiều rộng màn hình ngang — đã bỏ vì app hiện
+                // khóa portrait.)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            for (int i = 0; i < _filteredArticles.length; i += 2)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12, right: 6),
-                                child: NewsArticleCard(
-                                  article: _filteredArticles[i],
-                                  onTap: () => NewsDetailSheet.show(context, _filteredArticles[i]),
-                                ),
-                              ),
-                          ],
+                      for (final article in _filteredArticles)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: NewsArticleCard(
+                            article: article,
+                            onTap: () => NewsDetailSheet.show(context, article),
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            for (int i = 1; i < _filteredArticles.length; i += 2)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12, left: 6),
-                                child: NewsArticleCard(
-                                  article: _filteredArticles[i],
-                                  onTap: () => NewsDetailSheet.show(context, _filteredArticles[i]),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),

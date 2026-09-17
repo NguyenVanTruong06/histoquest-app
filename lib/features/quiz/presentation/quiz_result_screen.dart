@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/year_format.dart';
 import '../../../data/models/historical_event_model.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/stat_badge.dart';
@@ -83,9 +84,10 @@ class _QuizResultScreenState extends State<QuizResultScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Landscape: tách thành 2 cột thay vì 1 cột dọc rất dài — cột trái cố
-    // định (icon + tiêu đề kết quả), cột phải cuộn được (điểm số, phần
-    // thưởng, nút hành động) — tận dụng chiều rộng, giảm cuộn dọc.
+    // Portrait: một cột dọc duy nhất, cuộn được toàn bộ — icon/tiêu đề kết
+    // quả ở trên, rồi tới điểm số, phần thưởng và nút hành động bên dưới.
+    // (Có một bản landscape cũ tách thành 2 cột cạnh nhau để tận dụng
+    // chiều rộng màn hình ngang — đã bỏ vì app hiện khóa portrait.)
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -94,71 +96,55 @@ class _QuizResultScreenState extends State<QuizResultScreen>
           if (_isPassed) _buildConfettiLayer(),
 
           SafeArea(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildTopLabel(),
-                        const SizedBox(height: 22),
-                        ScaleTransition(
-                          scale: _scaleAnimation,
-                          child: _buildResultIcon(),
-                        ),
-                        const SizedBox(height: 18),
-                        _buildResultTitle(),
-                        const SizedBox(height: 6),
-                        if (widget.event != null)
-                          Text(
-                            '${widget.event!.year} · ${widget.event!.title}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primaryDark,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                      ],
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 20),
+              child: Column(
+                children: [
+                  _buildTopLabel(),
+                  const SizedBox(height: 22),
+                  ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: _buildResultIcon(),
+                  ),
+                  const SizedBox(height: 18),
+                  _buildResultTitle(),
+                  const SizedBox(height: 6),
+                  if (widget.event != null)
+                    Text(
+                      '${formatHistoricalYear(widget.event!.year)} · ${widget.event!.title}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryDark,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                  const SizedBox(height: 24),
+
+                  // Thẻ điểm số + trạng thái
+                  _buildScoreCard(),
+
+                  const SizedBox(height: 16),
+
+                  // Thẻ phần thưởng
+                  FadeTransition(
+                    opacity: _badgesAnimation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.15),
+                        end: Offset.zero,
+                      ).animate(_badgesAnimation),
+                      child: _buildRewardsCard(),
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 5,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(12, 20, 22, 20),
-                    child: Column(
-                      children: [
-                        // Thẻ điểm số + trạng thái
-                        _buildScoreCard(),
 
-                        const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                        // Thẻ phần thưởng
-                        FadeTransition(
-                          opacity: _badgesAnimation,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.15),
-                              end: Offset.zero,
-                            ).animate(_badgesAnimation),
-                            child: _buildRewardsCard(),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Các nút hành động
-                        _buildActionButtons(),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                  // Các nút hành động
+                  _buildActionButtons(),
+                ],
+              ),
             ),
           ),
         ],

@@ -5,10 +5,10 @@ import '../../../../shared/widgets/primary_button.dart';
 
 /// Khung hiển thị giải thích đáp án + nút hành động (Kiểm tra / Tiếp tục).
 ///
-/// Bản landscape: trước đây đây là một "bottom sheet" cố định đáy màn hình,
-/// rất tốn chiều cao vốn eo hẹp khi xoay ngang. Giờ được dùng như một
-/// panel bên PHẢI màn hình (đứng cạnh câu hỏi thay vì đè lên phía dưới),
-/// nên bo góc chuyển sang cạnh trái và cho phép cuộn nếu nội dung dài.
+/// Neo cố định ở ĐÁY màn hình (kiểu bottom sheet), bo góc trên, cho phép
+/// cuộn nếu nội dung dài. (Có một bản landscape cũ dùng widget này như một
+/// panel bên PHẢI màn hình đứng cạnh câu hỏi — đã bỏ vì app hiện khóa
+/// portrait.)
 class QuizExplanationSheet extends StatelessWidget {
   final AnswerStatus status;
   final bool isButtonEnabled;
@@ -42,17 +42,17 @@ class QuizExplanationSheet extends StatelessWidget {
       height: double.infinity,
       decoration: BoxDecoration(
         color: containerBg,
-        borderRadius: const BorderRadius.horizontal(left: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
-            offset: const Offset(-4, 0),
+            offset: const Offset(0, -4),
           ),
         ],
       ),
       child: SafeArea(
-        left: false,
+        top: false,
         child: Column(
           children: [
             Expanded(
