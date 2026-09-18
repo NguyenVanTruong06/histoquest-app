@@ -82,9 +82,8 @@ class _TimelineRushScreenState extends State<TimelineRushScreen> {
             Expanded(
               child: ReorderableListView.builder(
                 itemCount: _events.length,
-                onReorder: (oldIndex, newIndex) {
+                onReorderItem: (oldIndex, newIndex) {
                   setState(() {
-                    if (newIndex > oldIndex) newIndex--;
                     final item = _events.removeAt(oldIndex);
                     _events.insert(newIndex, item);
                     _isChecking = false;

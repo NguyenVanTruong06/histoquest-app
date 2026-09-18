@@ -481,8 +481,8 @@ class _QuizResultScreenState extends State<QuizResultScreen>
           height: 52,
           child: OutlinedButton.icon(
             onPressed: () {
-              // Pop màn kết quả, quay lại quiz từ đầu
-              context.pop();
+              // Khởi động lại quiz từ đầu với bộ câu hỏi mới hoàn toàn
+              context.pushReplacement('/quiz', extra: widget.event);
             },
             icon: const Icon(Icons.refresh_rounded, size: 18),
             label: const Text(

@@ -559,12 +559,8 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildEmptyCard(int index) {
-    Color rarityColor = index % 2 == 0
-        ? const Color(0xFF6B429A)
-        : const Color(0xFFB97F29);
     String rarityText = index % 2 == 0 ? 'Epic' : 'Legendary';
     if (index % 3 == 0) {
-      rarityColor = const Color(0xFF1E6353);
       rarityText = 'Rare';
     }
 
