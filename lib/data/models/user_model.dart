@@ -8,6 +8,9 @@ class UserModel {
   final int xp;
   final int totalQuestsCompleted;
   final String? avatarUrl;
+  final String currentBannerId;
+  final String currentFrameId;
+  final List<String> unlockedDecorationIds;
 
   const UserModel({
     required this.id,
@@ -19,6 +22,9 @@ class UserModel {
     this.xp = 0,
     this.totalQuestsCompleted = 0,
     this.avatarUrl,
+    this.currentBannerId = 'banner_default',
+    this.currentFrameId = 'frame_default',
+    this.unlockedDecorationIds = const ['frame_default', 'banner_default'],
   });
 
   UserModel copyWith({
@@ -31,6 +37,9 @@ class UserModel {
     int? xp,
     int? totalQuestsCompleted,
     String? avatarUrl,
+    String? currentBannerId,
+    String? currentFrameId,
+    List<String>? unlockedDecorationIds,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -42,6 +51,9 @@ class UserModel {
       xp: xp ?? this.xp,
       totalQuestsCompleted: totalQuestsCompleted ?? this.totalQuestsCompleted,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      currentBannerId: currentBannerId ?? this.currentBannerId,
+      currentFrameId: currentFrameId ?? this.currentFrameId,
+      unlockedDecorationIds: unlockedDecorationIds ?? this.unlockedDecorationIds,
     );
   }
 
@@ -56,6 +68,9 @@ class UserModel {
       'xp': xp,
       'totalQuestsCompleted': totalQuestsCompleted,
       'avatarUrl': avatarUrl,
+      'currentBannerId': currentBannerId,
+      'currentFrameId': currentFrameId,
+      'unlockedDecorationIds': unlockedDecorationIds,
     };
   }
 
@@ -70,6 +85,12 @@ class UserModel {
       xp: json['xp'] as int? ?? 0,
       totalQuestsCompleted: json['totalQuestsCompleted'] as int? ?? 0,
       avatarUrl: json['avatarUrl'] as String?,
+      currentBannerId: json['currentBannerId'] as String? ?? 'banner_default',
+      currentFrameId: json['currentFrameId'] as String? ?? 'frame_default',
+      unlockedDecorationIds: (json['unlockedDecorationIds'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const ['frame_default', 'banner_default'],
     );
   }
 }

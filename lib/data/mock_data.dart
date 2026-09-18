@@ -87,7 +87,7 @@ class MockData {
   }
 
   /// Thông tin người dùng hiện tại
-  static final UserModel currentUser = UserModel(
+  static UserModel currentUser = UserModel(
     id: 'user_001',
     name: 'An',
     level: 7,
@@ -96,6 +96,9 @@ class MockData {
     coins: 1250,
     xp: 350,
     totalQuestsCompleted: 14,
+    currentBannerId: 'banner_default',
+    currentFrameId: 'frame_default',
+    unlockedDecorationIds: const ['frame_default', 'banner_default'],
   );
 
   /// Danh sách thẻ danh tướng thu thập được

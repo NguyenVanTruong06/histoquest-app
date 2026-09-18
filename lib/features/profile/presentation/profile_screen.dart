@@ -5,20 +5,54 @@ import '../../../data/mock_data.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/models/hero_card_model.dart';
 import '../../../shared/widgets/app_card.dart';
+import 'widgets/histo_profile_header.dart';
+import 'widgets/profile_customization_shop_sheet.dart';
+import 'widgets/settings_modal_sheet.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late UserModel _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _user = MockData.currentUser;
+  }
+
+  void _updateUser(UserModel updatedUser) {
+    setState(() {
+      _user = updatedUser;
+      MockData.currentUser = updatedUser;
+    });
+  }
+
+  void _openShop() {
+    ProfileCustomizationShopSheet.show(
+      context,
+      user: _user,
+      onUpdateUser: _updateUser,
+    );
+  }
+
+  void _openSettings() {
+    SettingsModalSheet.show(context);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final UserModel user = MockData.currentUser;
     final List<HeroCardModel> cards = MockData.heroCards;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Của tôi',
+          'Hồ Sơ Sử Quán',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
@@ -39,26 +73,27 @@ class ProfileScreen extends StatelessWidget {
                   Icons.settings_outlined,
                   color: AppColors.textPrimary,
                 ),
-                onPressed: () {
-                  // Settings dummy
-                },
+                tooltip: 'Cài đặt',
+                onPressed: _openSettings,
               ),
             ),
           ),
         ],
       ),
-      // Portrait: một cột dọc duy nhất, cuộn được toàn bộ — thông tin cá
-      // nhân, chuỗi ngày, thành tựu, rồi tới bảo tàng thẻ bài. (Có một bản
-      // landscape cũ tách thành 2 cột cuộn độc lập cạnh nhau để tận dụng
-      // chiều rộng màn hình ngang — đã bỏ vì app hiện khóa portrait.)
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildProfileHeader(user),
+            HistoProfileHeader(
+              user: _user,
+              onOpenShop: _openShop,
+              onCustomize: _openShop,
+            ),
             const SizedBox(height: 16),
-            _buildStreakSection(user),
+            _buildXpProgressBar(_user),
+            const SizedBox(height: 16),
+            _buildStreakSection(_user),
             const SizedBox(height: 16),
             _buildAchievementsSection(),
             const SizedBox(height: 20),
@@ -71,197 +106,48 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(UserModel user) {
+  Widget _buildXpProgressBar(UserModel user) {
     return AppCard(
-      isActive: false,
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.gold, width: 3),
-                    color: const Color(0xFF1E6353), // Dark green
-                  ),
-                  child: Center(
-                    child: Text(
-                      user.name,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${user.title} ${user.name}',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                          height: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.gold),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.star_rounded,
-                                  color: AppColors.gold,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Cấp ${user.level}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.gold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Text(
-                          'Chế độ khách',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'Còn 760 XP nữa là lên cấp 8 ',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    Text(
-                      '${user.xp} / 2000',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E6353),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: user.xp / 2000,
-                    backgroundColor: const Color(0xFFEBE5D9),
-                    color: const Color(0xFF1E6353),
-                    minHeight: 10,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Divider(height: 1, color: Color(0xFFEBE5D9)),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatItem('17', 'sao'),
-              Container(width: 1, height: 50, color: const Color(0xFFEBE5D9)),
-              _buildStatItem(
-                '6',
-                'thẻ bài',
-                valueColor: const Color(0xFF1E6353),
+              const Text(
+                'Tiến độ danh vọng tiếp theo',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
-              Container(width: 1, height: 50, color: const Color(0xFFEBE5D9)),
-              _buildStatItem(
-                '${user.streakDays}',
-                'ngày liền',
-                valueColor: Colors.deepOrange,
+              Text(
+                '${user.xp} / 2000 XP',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E6353),
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: (user.xp / 2000).clamp(0.0, 1.0),
+              backgroundColor: const Color(0xFFEBE5D9),
+              color: const Color(0xFF1E6353),
+              minHeight: 10,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(String value, String label, {Color? valueColor}) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: valueColor ?? const Color(0xFFB97F29),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildStreakSection(UserModel user) {
     return AppCard(
