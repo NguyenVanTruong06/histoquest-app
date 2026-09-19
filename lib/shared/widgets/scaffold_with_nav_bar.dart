@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import 'custom_floating_bottom_nav.dart';
 
-/// Khung điều hướng chính của app.
-/// Navigation được cất vào một bottom sheet, mở/đóng bằng
-/// nút tròn có icon hamburger (≡) ở góc dưới phải màn hình.
+/// Khung điều hướng chính của app HistoQuest dạng Floating Dual-Dock chuẩn iOS / Clean UI:
+/// - Dock chính (trái): 4 danh mục chính của HistoQuest [Bản đồ, Bảng vàng, Trò chơi, Bản tin (kèm badge)]
+/// - Dock phụ (phải): Nút tròn Cài đặt độc lập (width: 56, height: 56, BoxShape.circle)
+/// - Tự động thu gọn (collapse / slide down) khi người dùng cuộn xuống để tối đa diện tích xem nội dung,
+///   và mở lại mượt mà khi cuộn lên hoặc chuyển tab.
 class ScaffoldWithNavBar extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -15,279 +19,105 @@ class ScaffoldWithNavBar extends StatefulWidget {
   State<ScaffoldWithNavBar> createState() => _ScaffoldWithNavBarState();
 }
 
-class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
-    with SingleTickerProviderStateMixin {
-  static const _items = [
-    (label: 'Bản đồ', icon: Icons.map_rounded),
-    (label: 'Bảng vàng', icon: Icons.emoji_events_rounded),
-    (label: 'Trò chơi', icon: Icons.games_rounded),
-    (label: 'Tin tức', icon: Icons.forum_rounded),
-    (label: 'Của tôi', icon: Icons.person_rounded),
-  ];
-
-  bool _isOpen = false;
-
-  late final AnimationController _iconAnim;
-  late final Animation<double> _rotateAnim;
+class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
+  bool _isBarVisible = true;
 
   @override
-  void initState() {
-    super.initState();
-    _iconAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 260),
-    );
-    _rotateAnim = Tween<double>(begin: 0, end: 0.375).animate(
-      CurvedAnimation(parent: _iconAnim, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _iconAnim.dispose();
-    super.dispose();
-  }
-
-  void _toggleMenu() {
-    if (_isOpen) {
-      _closeMenu();
-    } else {
-      _openMenu();
+  void didUpdateWidget(covariant ScaffoldWithNavBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Khi đổi tab, tự động hiện lại thanh điều hướng
+    if (oldWidget.navigationShell.currentIndex != widget.navigationShell.currentIndex) {
+      _isBarVisible = true;
     }
   }
 
-  void _openMenu() {
-    setState(() => _isOpen = true);
-    _iconAnim.forward();
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black54,
-      isDismissible: true,
-      enableDrag: true,
-      useRootNavigator: true,
-      builder: (_) => _NavBottomSheet(
-        currentIndex: widget.navigationShell.currentIndex,
-        items: _items,
-        onTap: (index) {
-          _closeMenu();
-          widget.navigationShell.goBranch(
-            index,
-            initialLocation: index == widget.navigationShell.currentIndex,
-          );
-        },
-      ),
-    ).whenComplete(() {
-      if (mounted) {
-        setState(() => _isOpen = false);
-        _iconAnim.reverse();
-      }
-    });
+  /// Ánh xạ branch index của router (0..4) sang tab index của dock chính (0..3):
+  /// - Branch 0: /eras    -> Tab 0: Bản đồ
+  /// - Branch 1: /ranks   -> Tab 1: Bảng vàng
+  /// - Branch 2: /games   -> Tab 2: Trò chơi
+  /// - Branch 3: /social  -> Tab 3: Bản tin
+  /// - Branch 4: /profile -> Nút Cài đặt độc lập bên phải (-1)
+  int _tabIndexForBranch(int branchIndex) {
+    if (branchIndex >= 0 && branchIndex < 4) {
+      return branchIndex;
+    }
+    return -1; // Cài đặt (nút độc lập)
   }
 
-  void _closeMenu() {
-    Navigator.of(context, rootNavigator: true).pop();
+  /// Ánh xạ tab index của dock chính (0..3) sang branch index của router:
+  int _branchForTabIndex(int tabIndex) {
+    return tabIndex;
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentBranch = widget.navigationShell.currentIndex;
+    final currentTabIndex = _tabIndexForBranch(currentBranch);
+    final isSettingsActive = currentBranch == 4;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: widget.navigationShell,
-      floatingActionButton: _HamburgerFab(
-        rotateAnim: _rotateAnim,
-        onPressed: _toggleMenu,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Nút tròn hamburger
-// ---------------------------------------------------------------------------
-
-class _HamburgerFab extends StatelessWidget {
-  final Animation<double> rotateAnim;
-  final VoidCallback onPressed;
-
-  const _HamburgerFab({
-    required this.rotateAnim,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return RotationTransition(
-      turns: rotateAnim,
-      child: FloatingActionButton(
-        onPressed: onPressed,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 6,
-        shape: const CircleBorder(),
-        tooltip: 'Điều hướng',
-        child: const _HamburgerIcon(),
-      ),
-    );
-  }
-}
-
-/// Icon 3 sọc ngang tự vẽ bằng CustomPainter.
-class _HamburgerIcon extends StatelessWidget {
-  const _HamburgerIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(22, 16),
-      painter: _HamburgerPainter(color: Colors.white),
-    );
-  }
-}
-
-class _HamburgerPainter extends CustomPainter {
-  final Color color;
-  const _HamburgerPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final w = size.width;
-    final h = size.height;
-
-    canvas.drawLine(Offset(0, 0), Offset(w, 0), paint);
-    canvas.drawLine(Offset(0, h / 2), Offset(w, h / 2), paint);
-    canvas.drawLine(Offset(0, h), Offset(w, h), paint);
-  }
-
-  @override
-  bool shouldRepaint(_HamburgerPainter old) => old.color != color;
-}
-
-// ---------------------------------------------------------------------------
-// Bottom sheet chứa các mục navigation
-// ---------------------------------------------------------------------------
-
-class _NavBottomSheet extends StatelessWidget {
-  final int currentIndex;
-  final List<({String label, IconData icon})> items;
-  final ValueChanged<int> onTap;
-
-  const _NavBottomSheet({
-    required this.currentIndex,
-    required this.items,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 24),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.cardBorder, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Padding(
-            padding: const EdgeInsets.only(top: 10, bottom: 4),
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.cardBorder,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                for (var i = 0; i < items.length; i++)
-                  _SheetItem(
-                    label: items[i].label,
-                    icon: items[i].icon,
-                    isSelected: currentIndex == i,
-                    onTap: () => onTap(i),
-                  ),
-              ],
-            ),
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
-        ],
-      ),
-    );
-  }
-}
-
-class _SheetItem extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _SheetItem({
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        width: 60,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          // Chỉ phản hồi theo chiều cuộn dọc
+          if (notification.metrics.axis == Axis.vertical) {
+            if (notification.direction == ScrollDirection.reverse) {
+              // Cuộn xuống -> thu gọn / ẩn thanh nav bar
+              if (_isBarVisible) {
+                setState(() => _isBarVisible = false);
+              }
+            } else if (notification.direction == ScrollDirection.forward) {
+              // Cuộn lên -> bung mở / hiện lại thanh nav bar
+              if (!_isBarVisible) {
+                setState(() => _isBarVisible = true);
+              }
+            }
+          }
+          return false;
+        },
+        child: Stack(
           children: [
-            Icon(
-              icon,
-              size: 26,
-              color: isSelected
-                  ? AppColors.primaryDark
-                  : AppColors.textSecondary,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.1,
-                height: 1.2,
-                color: isSelected
-                    ? AppColors.primaryDark
-                    : AppColors.textSecondary,
+            // 1. Màn hình nhánh hiện tại (cuộn xuyên suốt xuống dưới dock)
+            widget.navigationShell,
+
+            // 2. Thanh điều hướng nổi (Custom Floating Dual-Dock)
+            // Hiệu ứng thu gọn mượt mà AnimatedSlide + AnimatedOpacity
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: AnimatedSlide(
+                offset: _isBarVisible ? Offset.zero : const Offset(0, 1.4),
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeInOutCubic,
+                child: AnimatedOpacity(
+                  opacity: _isBarVisible ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  child: IgnorePointer(
+                    ignoring: !_isBarVisible,
+                    child: CustomFloatingBottomNav(
+                      currentIndex: currentTabIndex,
+                      isSettingsSelected: isSettingsActive,
+                      onTap: (tabIndex) {
+                        setState(() => _isBarVisible = true);
+                        final targetBranch = _branchForTabIndex(tabIndex);
+                        widget.navigationShell.goBranch(
+                          targetBranch,
+                          initialLocation: targetBranch == currentBranch,
+                        );
+                      },
+                      onSettingsTap: () {
+                        setState(() => _isBarVisible = true);
+                        // Chuyển sang màn hình Cài đặt (Branch 4)
+                        widget.navigationShell.goBranch(
+                          4,
+                          initialLocation: currentBranch == 4,
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

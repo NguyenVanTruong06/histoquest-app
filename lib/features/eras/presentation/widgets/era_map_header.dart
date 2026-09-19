@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../data/models/era_model.dart';
-import '../../../../shared/widgets/stat_badge.dart';
 
-/// Header đỉnh cho Màn hình Bản đồ Sự kiện (Bước 2)
+/// Header đỉnh cho Màn hình Bản đồ Sự kiện (EraEventsMapScreen).
 ///
-/// Portrait: chia thành 2 hàng — hàng 1 (nút back + stats XP/xu/streak),
-/// hàng 2 (tiêu đề thời kỳ + tiến trình). (Có một bản landscape cũ gộp cả
-/// 2 hàng này thành 1 hàng duy nhất để tận dụng chiều rộng màn hình ngang —
-/// đã bỏ vì app hiện khóa portrait và 1 hàng duy nhất quá chật trên màn
-/// hình dọc hẹp.)
+/// Thiết kế đồng bộ hoàn toàn với tông màu chủ đạo HistoQuest (AppColors.primary):
+/// - Header phẳng mép đáy (borderRadius: BorderRadius.zero).
+/// - Hàng 1: Nút Back tròn trắng mờ + Tên thời kỳ + Bộ đôi pill trắng Xu & Streak.
+/// - Hàng 2: Thế kỷ lịch sử + Thanh tiến trình mốc sự kiện vàng kim.
 class EraMapHeader extends StatelessWidget {
   final EraModel era;
   final int completedCount;
@@ -32,146 +30,204 @@ class EraMapHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.paddingOf(context).top;
     final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
 
     return Container(
+      width: double.infinity,
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 10,
-        left: 16,
-        right: 16,
+        top: topPadding + 6,
+        left: 14,
+        right: 14,
         bottom: 10,
       ),
       decoration: const BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          bottom: BorderSide(
-            color: Color(0xFFE2DDD2),
-            width: 1.5,
+        color: AppColors.primary,
+        borderRadius: BorderRadius.zero,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x28000000),
+            offset: Offset(0, 2),
+            blurRadius: 4,
           ),
-        ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hàng 1: nút back + stats Gamification (XP, Xu, Lửa Streak)
+          // Hàng 1: Nút back + Tên thời kỳ + Pill Xu / Streak
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Nút quay lại bo góc 3D
+              // Nút quay lại tròn trắng mờ
               Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onBack,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(20),
                   child: Container(
-                    padding: const EdgeInsets.all(8),
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE0DCD3), width: 1.5),
-                      boxShadow: const [
+                      color: Colors.white.withValues(alpha: 0.22),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.35),
+                        width: 1.2,
+                      ),
+                      boxShadow: [
                         BoxShadow(
-                          color: Color(0x153A2A1A),
-                          offset: Offset(0, 2),
-                          blurRadius: 4,
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
                         ),
                       ],
                     ),
                     child: const Icon(
                       Icons.arrow_back_rounded,
-                      color: AppColors.textPrimary,
-                      size: 22,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
                 ),
               ),
 
-              const Spacer(),
+              const SizedBox(width: 10),
 
-              // Hàng Stats Gamification: XP, Xu, Lửa Streak
-              StatBadge(type: StatType.xp, label: '$userXp'),
+              // Tên thời kỳ
+              Expanded(
+                child: Text(
+                  era.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              // Pill xu vàng
+              _buildPill(
+                icon: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF3B438),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.monetization_on_rounded,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                  ),
+                ),
+                label: '${userCoins.toString().padLeft(3, '0')} xu',
+              ),
+
               const SizedBox(width: 6),
-              StatBadge(type: StatType.coin, label: '$userCoins'),
-              const SizedBox(width: 6),
-              StatBadge(type: StatType.streak, label: '$streakDays'),
+
+              // Pill chuỗi ngày (ngọn lửa)
+              _buildPill(
+                icon: const Icon(
+                  Icons.local_fire_department_rounded,
+                  color: Color(0xFFFF5A1F),
+                  size: 16,
+                ),
+                label: '$streakDays ngày',
+              ),
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
-          // Hàng 2: tiêu đề thời kỳ + chỉ số tiến độ
+          // Hàng 2: Tiêu đề thế kỷ + Chỉ số tiến độ
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Tiêu đề thời kỳ
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      era.centuryTitle.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      era.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+              Text(
+                era.centuryTitle.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white.withValues(alpha: 0.85),
+                  letterSpacing: 0.8,
                 ),
               ),
-
-              const SizedBox(width: 16),
-
-              // Chỉ số tiến độ & thanh mini
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$completedCount / $totalCount sự kiện',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Container(
-                    width: 100,
-                    height: 8,
+              const Spacer(),
+              Text(
+                '$completedCount/$totalCount mốc',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Mini progress bar
+              Container(
+                width: 75,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.28),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: progress.clamp(0.0, 1.0),
+                  child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE5DFC9),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: progress.clamp(0.0, 1.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFF3BF4B), Color(0xFFE4A93A)],
-                          ),
-                          borderRadius: BorderRadius.circular(4),
+                      color: const Color(0xFFFFD54F),
+                      borderRadius: BorderRadius.circular(3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 2,
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPill({required Widget icon, required String label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4.5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          icon,
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2C2F28),
+            ),
           ),
         ],
       ),

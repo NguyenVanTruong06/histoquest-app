@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/mock_data.dart';
 import '../../../data/models/news_article_model.dart';
+import '../../../shared/widgets/histoquest_top_header.dart';
 import '../../../shared/widgets/app_empty_view.dart';
 import '../../../shared/widgets/app_error_view.dart';
 import '../../../shared/widgets/app_loading_view.dart';
 import '../../../shared/widgets/app_modal_dialog.dart';
-import '../../../shared/widgets/stat_badge.dart';
 import 'widgets/news_article_card.dart';
 import 'widgets/news_category_chips.dart';
 import 'widgets/news_detail_sheet.dart';
@@ -59,80 +59,44 @@ class _SocialScreenState extends State<SocialScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = MockData.currentUser;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 1. Header Màn hình Tin tức
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Bản Tin Sử Việt',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Khám phá sử liệu & di sản ngàn năm',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const StatBadge(
-                    type: StatType.coin,
-                    label: '1250 xu',
-                  ),
-                  const SizedBox(width: 8),
-                  const StatBadge(
-                    type: StatType.xp,
-                    label: '+350 XP',
-                  ),
-                ],
-              ),
-            ),
+      body: Column(
+        children: [
+          HistoquestTopHeader(
+            title: 'Bản Tin Sử Việt',
+            coins: user.coins,
+            streakDays: user.streakDays,
+          ),
 
-            // 2. Thanh chuyển đổi trạng thái kiểm thử (Demo State Switcher)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.cardBorder),
-              ),
-              child: Row(
-                children: [
-                  _buildStateTab('Bình thường', DemoUiState.normal),
-                  _buildStateTab('Đang tải', DemoUiState.loading),
-                  _buildStateTab('Trống', DemoUiState.empty),
-                  _buildStateTab('Lỗi', DemoUiState.error),
-                ],
-              ),
+          // 2. Thanh chuyển đổi trạng thái kiểm thử (Demo State Switcher)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.cardBorder),
             ),
-
-            const SizedBox(height: 6),
-
-            // 3. Nội dung chính theo trạng thái UI
-            Expanded(
-              child: _buildMainContent(),
+            child: Row(
+              children: [
+                _buildStateTab('Bình thường', DemoUiState.normal),
+                _buildStateTab('Đang tải', DemoUiState.loading),
+                _buildStateTab('Trống', DemoUiState.empty),
+                _buildStateTab('Lỗi', DemoUiState.error),
+              ],
             ),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 4),
+
+          // 3. Nội dung chính theo trạng thái UI
+          Expanded(
+            child: _buildMainContent(),
+          ),
+        ],
       ),
     );
   }

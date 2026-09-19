@@ -9,6 +9,7 @@ import '../features/ranks/presentation/ranks_screen.dart';
 import '../features/games/presentation/games_screen.dart';
 import '../features/social/presentation/social_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
 import '../features/quiz/presentation/quiz_screen.dart';
 import '../features/quiz/presentation/quiz_result_screen.dart';
 import '../data/models/historical_event_model.dart';
@@ -104,13 +105,19 @@ GoRouter goRouter(Ref ref) {
             ],
           ),
 
-          // Branch 5: Của tôi (Profile)
+          // Branch 5: Cài đặt (Settings)
           StatefulShellBranch(
             navigatorKey: _profileNavigatorKey,
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => const ProfileScreen(),
+                builder: (context, state) => const SettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'detail',
+                    builder: (context, state) => const ProfileScreen(),
+                  ),
+                ],
               ),
             ],
           ),

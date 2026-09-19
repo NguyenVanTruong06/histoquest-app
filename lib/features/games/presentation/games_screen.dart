@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../data/mock_data.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/histoquest_top_header.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/stat_badge.dart';
 import 'mancala_game_screen.dart';
@@ -12,35 +14,20 @@ class GamesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = MockData.currentUser;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Trò Chơi Dân Gian',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+      body: Column(
+        children: [
+          HistoquestTopHeader(
+            title: 'Trò Chơi Dân Gian',
+            coins: user.coins,
+            streakDays: user.streakDays,
           ),
-        ),
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: Row(
-              children: [
-                StatBadge(type: StatType.coin, label: '1250 xu'),
-                SizedBox(width: 8),
-                StatBadge(type: StatType.xp, label: '+350 XP'),
-              ],
-            ),
-          ),
-        ],
-      ),
-      // Sử dụng CustomScrollView kết hợp SliverToBoxAdapter để cuộn mượt mà,
-      // co giãn tự động theo không gian thực tế và tránh hoàn toàn lỗi bottom overflow.
-      body: CustomScrollView(
-        slivers: [
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
           SliverPadding(
             padding: const EdgeInsets.symmetric(
               horizontal: 18.0,
@@ -199,7 +186,10 @@ class GamesScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  ],
+),
+);
   }
 
   Widget _buildGameCard(

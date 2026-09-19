@@ -7,7 +7,6 @@ import '../../../data/models/hero_card_model.dart';
 import '../../../shared/widgets/app_card.dart';
 import 'widgets/histo_profile_header.dart';
 import 'widgets/profile_customization_shop_sheet.dart';
-import 'widgets/settings_modal_sheet.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -40,10 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _openSettings() {
-    SettingsModalSheet.show(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     final List<HeroCardModel> cards = MockData.heroCards;
@@ -60,25 +55,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         backgroundColor: AppColors.surface,
         elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.settings_outlined,
-                  color: AppColors.textPrimary,
-                ),
-                tooltip: 'Cài đặt',
-                onPressed: _openSettings,
-              ),
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),

@@ -1,29 +1,25 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/country_model.dart';
-import '../../../data/models/era_model.dart';
+import '../../../data/models/period_item.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/mock_data.dart';
+import 'widgets/beanstalk_pathway_painter.dart';
 import 'widgets/country_page_card.dart';
-import 'widgets/era_vertical_item.dart';
+import 'widgets/histoquest_top_header.dart';
+import 'widgets/timeline_card.dart';
 
-/// Màn hình gốc của tab "Bản đồ" (branch đầu tiên trong shell chính).
+/// Màn hình gốc của tab "Bản đồ" (HistoQuest).
 ///
-/// Luồng chơi 3 bước liên tiếp:
-///   Bước 1 — PageView ngang snap từng thẻ chọn nền văn minh.
-///   Bước 2 — PageView dọc chọn thời kỳ, item trung tâm phóng to/nét, các
-///            item lân cận thu nhỏ/mờ/blur dần theo khoảng cách.
-///   Bước 3 — Bản đồ Kingdom Rush dọc (xem `EraEventsMapScreen`).
-///
-/// Cơ chế mở khóa nền văn minh: mỗi nền văn minh (trừ nền văn minh khởi đầu)
-/// yêu cầu người chơi đạt một số mốc lịch sử nhất định ở nền văn minh tiên
-/// quyết (xem [CountryModel.requiresCountryId] /
-/// [CountryModel.requiresMilestoneCount] và [MockData.isCountryUnlocked]).
-/// Khi còn khóa, thẻ nền văn minh hiển thị luôn lời giải thích cơ chế này.
+/// Thiết kế chuyên gia Flutter UI/UX phong cách gamification/phiêu lưu lịch sử:
+/// - Màn 1: "Chọn nền văn minh" — Danh sách thẻ dọc với tranh phong cảnh
+///   đồi cỏ xanh ngát, mây trời trong trẻo, huy hiệu cờ đỏ sao vàng.
+/// - Màn 2: "Chọn Thời Kì" — Trục Dây Leo (Beanstalk Pathway) trải dọc
+///   chính giữa màn hình, dùng SingleChildScrollView bọc Stack, các thẻ
+///   thời kỳ (TimelineCard) sắp xếp so le sinh động, tích hợp chi tiết lá bám
+///   và badge '★ Đang chọn'.
 class ErasScreen extends StatefulWidget {
   const ErasScreen({super.key});
 
@@ -35,27 +31,43 @@ class _ErasScreenState extends State<ErasScreen> {
   final UserModel _user = MockData.currentUser;
   final List<CountryModel> _countries = MockData.countries;
 
-  /// Nền văn minh đang được xem trong tab này. `null` = đang ở bước chọn nền
-  /// văn minh (bước đầu tiên của tab Bản đồ). Được giữ nguyên khi chuyển
-  /// qua lại giữa các tab khác trong phiên chơi (nhờ IndexedStack của
-  /// StatefulShellRoute), chỉ reset khi mở lại app.
+  /// Nền văn minh đang được xem trong tab này. `null` = đang ở bước chọn nền văn minh.
   String? _activeCountryId;
 
-  late final PageController _countryPageController =
-      PageController(viewportFraction: 0.88);
-  late final PageController _eraPageController =
-      PageController(viewportFraction: 0.62);
+  /// ID thời kỳ đang được chọn trên dòng thời gian dây leo
+  String _selectedPeriodId = 'era_1';
 
-  @override
-  void dispose() {
-    _countryPageController.dispose();
-    _eraPageController.dispose();
-    super.dispose();
-  }
-
-  List<EraModel> get _eras => MockData.eras
-      .where((e) => e.countryId == _activeCountryId)
-      .toList();
+  // 4 thời kỳ mẫu (Mock Data) theo yêu cầu chuẩn gamification
+  final List<PeriodItem> _samplePeriods = const [
+    PeriodItem(
+      id: 'era_1',
+      title: 'Thời kì Tiền Sử',
+      subtitle: 'Khoảng 500.000 năm - 2879 TCN',
+      imageUrl: 'assets/images/eras/prehistoric_cave_art.jpg',
+      isSelected: true,
+    ),
+    PeriodItem(
+      id: 'era_ly_tran',
+      title: 'Thời kì Lý - Trần',
+      subtitle: 'Năm 1009 - 1400',
+      imageUrl: 'assets/images/eras/dong_son_art.jpg',
+      isSelected: false,
+    ),
+    PeriodItem(
+      id: 'era_khang_chien',
+      title: 'Thời kì Kháng Chiến',
+      subtitle: 'Năm 1945 - 1975',
+      imageUrl: 'assets/images/countries/vn.jpg',
+      isSelected: false,
+    ),
+    PeriodItem(
+      id: 'era_hien_dai',
+      title: 'Thời kỳ Hiện Đại',
+      subtitle: 'Năm 1975 - Nay',
+      imageUrl: 'assets/images/countries/vn.jpg',
+      isSelected: false,
+    ),
+  ];
 
   CountryModel? get _activeCountry {
     if (_activeCountryId == null) return null;
@@ -106,277 +118,188 @@ class _ErasScreenState extends State<ErasScreen> {
   @override
   Widget build(BuildContext context) {
     final activeCountry = _activeCountry;
+    // Bố cục & Cấu trúc chính: Background màu be nhạt theo yêu cầu
+    const backgroundColor = Color(0xFFF3F0E6);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0.5,
-        titleSpacing: 16,
-        leading: activeCountry == null
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
-                tooltip: 'Đổi nền văn minh',
-                onPressed: _backToCountrySelect,
-              ),
-        automaticallyImplyLeading: activeCountry != null,
-        title: Text(
-          activeCountry == null ? 'HistoQuest' : '${activeCountry.flagEmoji}  ${activeCountry.name}',
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.5,
-            fontSize: 20,
+      backgroundColor: backgroundColor,
+      body: Column(
+        children: [
+          // 2. Thanh AppBar / Header tùy biến với màu chủ đạo
+          HistoquestTopHeader(
+            isEraMode: activeCountry != null,
+            countryName: activeCountry?.name,
+            countryFlagEmoji: activeCountry?.flagEmoji,
+            onBack: _backToCountrySelect,
+            coins: _user.coins,
+            streakDays: _user.streakDays,
           ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE5DFC9)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.monetization_on_rounded,
-                    color: AppColors.gold,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${_user.coins}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Icon(
-                    Icons.local_fire_department_rounded,
-                    color: Colors.deepOrange,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${_user.streakDays}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+
+          // Thân màn hình theo từng bước
+          Expanded(
+            child: activeCountry == null
+                ? _buildCountrySelectBody()
+                : _buildErasBody(),
           ),
         ],
       ),
-      body: activeCountry == null ? _buildCountrySelectBody() : _buildErasBody(),
     );
   }
 
   // ---------------------------------------------------------------------
-  // Bước 1: Chọn nền văn minh — PageView ngang snap từng thẻ.
+  // Bước 1: Chọn nền văn minh (Screen 1)
   // ---------------------------------------------------------------------
   Widget _buildCountrySelectBody() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Chọn một nền văn minh',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Vuốt ngang để khám phá — mỗi nền văn minh là một hành trình lịch sử riêng.',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: PageView.builder(
-            controller: _countryPageController,
-            physics: const PageScrollPhysics(),
-            itemCount: _countries.length,
-            padEnds: true,
-            itemBuilder: (context, index) {
-              final country = _countries[index];
-              return AnimatedBuilder(
-                animation: _countryPageController,
-                builder: (context, child) {
-                  double page = index.toDouble();
-                  if (_countryPageController.hasClients &&
-                      _countryPageController.position.haveDimensions) {
-                    page = _countryPageController.page ?? page;
-                  }
-                  final delta = (page - index).abs().clamp(0.0, 1.0);
-                  final scale = 1.0 - delta * 0.08;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-                    child: Transform.scale(scale: scale, child: child),
-                  );
-                },
-                child: _buildCountryCard(country),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 14),
-        _buildDotIndicator(_countryPageController, _countries.length),
-        const SizedBox(height: 22),
-      ],
-    );
-  }
-
-  Widget _buildDotIndicator(PageController controller, int count) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        double page = 0;
-        if (controller.hasClients && controller.position.haveDimensions) {
-          page = controller.page ?? 0;
-        }
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(count, (i) {
-            final delta = (page - i).abs().clamp(0.0, 1.0);
-            final isActive = delta < 0.5;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: isActive ? 22 : 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: isActive ? AppColors.primary : AppColors.cardBorder,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            );
-          }),
-        );
-      },
-    );
-  }
-
-  Widget _buildCountryCard(CountryModel country) {
-    final unlocked = MockData.isCountryUnlocked(country);
-    final requiredId = country.requiresCountryId;
-    final requiredCount = country.requiresMilestoneCount ?? 0;
-    final doneCount =
-        requiredId == null ? 0 : MockData.completedMilestonesForCountry(requiredId);
-    final active = unlocked && country.hasContent;
-
-    return CountryPageCard(
-      country: country,
-      unlocked: unlocked,
-      active: active,
-      doneCount: doneCount,
-      requiredCount: requiredCount,
-      onTap: () => _selectCountry(country),
-    );
-  }
-
-  // ---------------------------------------------------------------------
-  // Bước 2: Chọn thời kỳ — PageView dọc, item trung tâm nổi bật, các item
-  // lân cận thu nhỏ/mờ/blur dần theo khoảng cách tới trang trung tâm.
-  // ---------------------------------------------------------------------
-  Widget _buildErasBody() {
-    final eras = _eras;
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 8.0),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Chào ${_user.name}!',
-                style: const TextStyle(
+                'Chọn nền văn minh',
+                style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 4),
-              const Text(
-                'Vuốt dọc để chọn một thời kỳ, thời kỳ đang chọn sẽ được phóng to',
+              SizedBox(height: 5),
+              Text(
+                'Vuốt dọc theo dây leo để chọn một thời kì muốn khám phá',
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 13.5,
                   color: AppColors.textSecondary,
+                  height: 1.3,
                 ),
               ),
             ],
           ),
         ),
         Expanded(
-          child: PageView.builder(
-            key: ValueKey(_activeCountryId),
-            controller: _eraPageController,
-            scrollDirection: Axis.vertical,
-            itemCount: eras.length,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
+            itemCount: _countries.length,
             itemBuilder: (context, index) {
-              final era = eras[index];
-              return AnimatedBuilder(
-                animation: _eraPageController,
-                builder: (context, _) {
-                  double page = index.toDouble();
-                  if (_eraPageController.hasClients &&
-                      _eraPageController.position.haveDimensions) {
-                    page = _eraPageController.page ?? page;
-                  }
-                  final delta = (page - index).abs().clamp(0.0, 1.0);
-                  final scale = 1.0 - delta * 0.15; // 1.0 tâm → 0.85 rìa
-                  final opacity = 1.0 - delta * 0.55; // 1.0 tâm → 0.45 rìa
-                  final blurSigma = delta * 3.0; // 0 tâm → 3.0 rìa
-                  final isCenter = delta < 0.5;
+              final country = _countries[index];
+              final unlocked = MockData.isCountryUnlocked(country);
+              final requiredId = country.requiresCountryId;
+              final requiredCount = country.requiresMilestoneCount ?? 0;
+              final doneCount = requiredId == null
+                  ? 0
+                  : MockData.completedMilestonesForCountry(requiredId);
+              final active = unlocked && country.hasContent;
 
-                  Widget item = EraVerticalItem(
-                    era: era,
-                    isCenter: isCenter,
-                    onTap: () => context.push('/eras/${era.id}'),
-                    onLockedTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Thời kỳ ${era.name} đang khóa!'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                    },
-                  );
-
-                  Widget content = Opacity(
-                    opacity: opacity.clamp(0.0, 1.0),
-                    child: Transform.scale(scale: scale, child: item),
-                  );
-
-                  if (blurSigma > 0.02) {
-                    content = ImageFiltered(
-                      imageFilter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-                      child: content,
-                    );
-                  }
-                  return content;
-                },
+              return CountryPageCard(
+                country: country,
+                unlocked: unlocked,
+                active: active,
+                doneCount: doneCount,
+                requiredCount: requiredCount,
+                onTap: () => _selectCountry(country),
               );
             },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Bước 2: Chọn Thời Kì (SingleChildScrollView + Stack + BeanstalkPathway)
+  // ---------------------------------------------------------------------
+  Widget _buildErasBody() {
+    // Cập nhật trạng thái isSelected cho danh sách thời kỳ mẫu
+    final periods = _samplePeriods.map((p) {
+      return p.copyWith(isSelected: p.id == _selectedPeriodId);
+    }).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Tiêu đề & Phụ đề ngay dưới Header
+        const Padding(
+          padding: EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Chọn Thời Kì',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                'Vuốt dọc theo dây leo để chọn một thời kì muốn khám phá',
+                style: TextStyle(
+                  fontSize: 13.0,
+                  color: Color(0xFF75746E),
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 1 & 3. Thân trang: SingleChildScrollView bọc một Stack
+        // để tạo hiệu ứng trục dây leo nằm sau và các card nằm đè lên trên
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Stack(
+              children: [
+                // 3. Trục dây leo (Beanstalk Pathway) trải dài dọc chính giữa
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: BeanstalkPathwayPainter(
+                      itemCount: periods.length,
+                    ),
+                  ),
+                ),
+
+                // 4. Các thẻ thời kỳ (TimelineCard) sắp xếp so le trái / phải dọc trục
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 36.0,
+                    horizontal: 16.0,
+                  ),
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < periods.length; i++) ...[
+                        // Sắp xếp so le trái / phải rõ nét theo đường cong của thân cây
+                        Align(
+                          alignment: i % 2 == 0
+                              ? const Alignment(-0.24, 0)
+                              : const Alignment(0.24, 0),
+                          child: TimelineCard(
+                            item: periods[i],
+                            onTap: () {
+                              setState(() {
+                                _selectedPeriodId = periods[i].id;
+                              });
+                            },
+                            onEnterMap: () {
+                              // Điều hướng vào bản đồ sự kiện
+                              context.push('/eras/era_1');
+                            },
+                          ),
+                        ),
+                        // Khoảng cách thoáng đãng giữa các thời kỳ để khoe trọn vẻ đẹp của cây đậu thần
+                        if (i < periods.length - 1) const SizedBox(height: 85),
+                      ],
+                      const SizedBox(height: 64),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
