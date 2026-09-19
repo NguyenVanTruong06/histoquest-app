@@ -42,4 +42,20 @@ class AppColors {
   static const Color danger = Color(0xFFC94747); // Đỏ cảnh báo
   static const Color warning = Color(0xFFE4A93A);
   static const Color info = Color(0xFF3B82F6);
+
+  // Thẻ thời kỳ đang khóa (Locked Card State)
+  static const Color lockedCardBg = Color(0xFFEAE5DA);
+  static const Color lockedCardBorder = Color(0xFFD3CBBB);
+  static const Color lockedTitle = Color(0xFF8C857B);
+  static const Color lockedSubtitle = Color(0xFFA8A196);
+
+  // Hiệu ứng phát sáng & lấp lánh (Glow & Sparkle)
+  static const List<Color> glowGradient = [
+    Color(0xFFFFD54F),
+    Color(0xFFFF8A65),
+    Color(0xFFFFD54F),
+  ];
+  static const Color sparkleGold = Color(0xFFFFD54F);
+  static const Color sparkleBlue = Color(0xFF81D4FA);
+  static const Color sparklePink = Color(0xFFF48FB1);
 }
