@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 /// Bảng màu chính xác trích xuất từ thiết kế HistoQuest (HistoQuest.html)
 class AppColors {
-  // Màu thương hiệu chính: Đỏ gạch nung / Terracotta lịch sử
-  static const Color primary = Color(0xFFD95D39);
-  static const Color primaryDark = Color(0xFFA53B20); // Viền đáy 3D của nút
-  static const Color primaryLight = Color(0xFFFDEDE7); // Nền badge đang học
+  // Màu thương hiệu chính: Xanh pastel #85B9D1
+  static const Color primary = Color(0xFF85B9D1);
+  static const Color primaryDark = Color(0xFF5A9BB9); // Viền đáy 3D của nút
+  static const Color primaryLight = Color(0xFFEFF7FA); // Nền badge đang học
 
   // Màu phụ / Vàng kim cổ điển (Coin, Cúp vàng, Sao)
   static const Color gold = Color(0xFFE4A93A);
@@ -22,11 +22,11 @@ class AppColors {
   static const Color streakColor = Color(0xFFD95D39); // Đỏ cam lửa streak
   static const Color streakBg = Color(0xFFFDEDE7);
 
-  // Nền giấy thời gian cổ kính (Parchment) & bề mặt
-  static const Color background = Color(0xFFF7F2E8); // Nền giấy ngà ấm áp
+  // Nền ứng dụng đồng điệu màu chủ đạo (#E3F6FF) & bề mặt
+  static const Color background = Color(0xFFE3F6FF); // Nền xanh pastel dịu mát
   static const Color surface = Colors.white;
-  static const Color cardBorder = Color(0xFFDED4C4); // Viền thẻ
-  static const Color cardBorderActive = Color(0xFFD95D39); // Viền thẻ đang học
+  static const Color cardBorder = Color(0xFFCDE8F5); // Viền thẻ
+  static const Color cardBorderActive = Color(0xFF85B9D1); // Viền thẻ đang học
 
   // Nền tối (Appbar cổ kính / Dark Coffee)
   static const Color darkBackground = Color(0xFF2A241F);

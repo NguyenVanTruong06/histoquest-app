@@ -118,8 +118,8 @@ class _ErasScreenState extends State<ErasScreen> {
   @override
   Widget build(BuildContext context) {
     final activeCountry = _activeCountry;
-    // Bố cục & Cấu trúc chính: Background màu be nhạt theo yêu cầu
-    const backgroundColor = Color(0xFFF3F0E6);
+    // Bố cục & Cấu trúc chính: Background màu xanh pastel #E3F6FF đồng điệu nút
+    final backgroundColor = AppColors.background;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -131,7 +131,7 @@ class _ErasScreenState extends State<ErasScreen> {
             countryName: activeCountry?.name,
             countryFlagEmoji: activeCountry?.flagEmoji,
             onBack: activeCountry != null ? _backToCountrySelect : null,
-            backgroundColor: activeCountry != null ? backgroundColor : null,
+            backgroundColor: backgroundColor,
             coins: _user.coins,
             streakDays: _user.streakDays,
           ),

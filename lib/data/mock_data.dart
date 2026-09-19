@@ -28,7 +28,7 @@ class MockData {
       subtitle: 'Rồng tiên · 4000 năm dựng nước và giữ nước',
       flagEmoji: '🇻🇳',
       icon: Icons.temple_buddhist_rounded,
-      accentColor: Color(0xFFD95D39),
+      accentColor: Color(0xFF85B9D1),
       hasContent: true,
       assetImagePath: 'assets/images/countries/vn.jpg',
     ),

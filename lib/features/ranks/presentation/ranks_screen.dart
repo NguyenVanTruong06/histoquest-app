@@ -450,12 +450,12 @@ class _RanksScreenState extends State<RanksScreen> {
         : (user['frameId'] as String? ?? 'frame_default');
     final frame = MockProfileDecorations.getFrame(frameId);
 
-    Color bgColor = isCurrentUser ? const Color(0xFFFFF4EE) : Colors.white;
+    Color bgColor = isCurrentUser ? const Color(0xFFEFF7FA) : Colors.white;
     Color borderColor = isCurrentUser
-        ? const Color(0xFFD95D39)
+        ? AppColors.primary
         : Colors.grey.shade200;
     Color rankColor = isCurrentUser
-        ? const Color(0xFFD95D39)
+        ? AppColors.primary
         : AppColors.textSecondary;
 
     return Container(

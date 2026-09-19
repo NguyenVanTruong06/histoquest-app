@@ -63,7 +63,7 @@ class QuizProgressHeader extends StatelessWidget {
                           curve: Curves.easeOutCubic,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFFE4A93A), Color(0xFFD95D39)],
+                              colors: [Color(0xFFE4A93A), AppColors.primary],
                             ),
                             borderRadius: BorderRadius.circular(99),
                           ),

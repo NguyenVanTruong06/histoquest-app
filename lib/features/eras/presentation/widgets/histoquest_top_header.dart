@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// Header HistoQuest hỗ trợ linh hoạt cho các màn hình trong ứng dụng:
-/// - Chế độ chuẩn / Tab chính: Header phẳng tông màu đỏ gạch thương hiệu (AppColors.primary)
-///   hoặc nền tùy biến với tiêu đề và pill xu/streak.
+/// Header HistoQuest thiết kế thanh thoát, màu nền trùng với background:
 /// - Chế độ Thời kỳ (isEraMode == true):
-///   + Nền header trùng màu hoàn toàn với background (không bóng đen đứt gãy).
+///   + Nền header trùng màu hoàn toàn với background (không dải màu đứt gãy, không đổ bóng).
 ///   + Bỏ hoàn toàn xu và chuỗi ngày.
-///   + Góc trái: Mũi tên thoát về (Back button).
-///   + Ở giữa: Tên nước (căn giữa tuyệt đối).
-///   + Góc phải: Cờ nước (cờ đỏ sao vàng hoặc emoji cờ).
+///   + Góc trái: Mũi tên thoát về (nút tròn viền mảnh, icon mũi tên tối màu).
+///   + Ở giữa: Tên nước (căn giữa, font chữ tinh tế, thanh lịch).
+///   + Góc phải: Lá cờ quốc gia (cờ đỏ sao vàng bo góc mềm mại).
+/// - Chế độ Chuẩn (Bảng vàng, Trò chơi, Bản tin, Bản đồ tổng):
+///   + Nền trùng màu background (AppColors.background).
+///   + Tiêu đề chữ màu than đậm (AppColors.textPrimary).
+///   + Bộ đôi pill Xu vàng & Chuỗi ngày streak nền trắng bo góc nhẹ nhàng.
 class HistoquestTopHeader extends StatelessWidget {
   final bool isEraMode;
   final String? title;
@@ -41,93 +43,80 @@ class HistoquestTopHeader extends StatelessWidget {
     final topPadding = MediaQuery.paddingOf(context).top;
 
     // -------------------------------------------------------------------------
-    // 1. Chế độ Thời kỳ (isEraMode): Nền trùng background, bỏ xu/streak,
-    //    chỉ còn: mũi tên góc trái, tên nước ở giữa, cờ ở góc phải.
+    // 1. Chế độ Thời kỳ (isEraMode): Chuẩn pixel theo hình mẫu của người dùng
     // -------------------------------------------------------------------------
     if (isEraMode) {
-      final effectiveBg = backgroundColor ?? const Color(0xFFF3F0E6);
+      final effectiveBg = backgroundColor ?? AppColors.background;
 
       return Container(
         width: double.infinity,
         padding: EdgeInsets.only(
           top: topPadding + 6,
-          bottom: 8,
+          bottom: 10,
           left: 16,
           right: 16,
         ),
         color: effectiveBg,
         child: Row(
           children: [
-            // Góc trái: Nút mũi tên thoát về
+            // Góc trái: Mũi tên thoát về (Nút tròn viền mảnh)
             if (onBack != null)
-              _buildCircularBackButton(isLightBg: true)
+              _buildCircularBackButton()
             else
-              const SizedBox(width: 38),
+              const SizedBox(width: 40),
 
-            // Ở giữa: Tên nước (căn giữa)
+            // Ở giữa: Tên nước (căn giữa, kích thước chữ thanh lịch ~14.5)
             Expanded(
               child: Text(
                 (countryName ?? 'VIỆT NAM').toUpperCase(),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  letterSpacing: 1.2,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C2A29),
+                  letterSpacing: 0.8,
                 ),
               ),
             ),
 
-            // Góc phải: Cờ nước
-            _buildCountryFlag(countryFlagEmoji, width: 38, height: 26),
+            // Góc phải: Cờ nước (hình chữ nhật bo góc đỏ sao vàng)
+            _buildCountryFlag(countryFlagEmoji),
           ],
         ),
       );
     }
 
     // -------------------------------------------------------------------------
-    // 2. Chế độ Tiêu chuẩn (Tab chính, Bảng vàng, Trò chơi, Tin tức):
-    //    Header phẳng thương hiệu với title và bộ đôi pill Xu & Streak.
+    // 2. Chế độ Tiêu chuẩn (Tab chính: Bảng vàng, Trò chơi, Tin tức):
+    //    Nền trùng màu với background, chữ màu than đậm, không đổ bóng thô.
     // -------------------------------------------------------------------------
-    final effectiveBg = backgroundColor ?? AppColors.primary;
+    final effectiveBg = backgroundColor ?? AppColors.background;
     final shouldShowStats = showStats ?? true;
 
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
         top: topPadding + 6,
-        bottom: 11,
-        left: 14,
-        right: 14,
+        bottom: 10,
+        left: 16,
+        right: 16,
       ),
-      decoration: BoxDecoration(
-        color: effectiveBg,
-        borderRadius: BorderRadius.zero,
-        boxShadow: effectiveBg == Colors.transparent
-            ? []
-            : const [
-                BoxShadow(
-                  color: Color(0x28000000),
-                  offset: Offset(0, 2),
-                  blurRadius: 4,
-                ),
-              ],
-      ),
+      color: effectiveBg,
       child: Row(
         children: [
           // Nút Back nếu có
           if (onBack != null) ...[
-            _buildCircularBackButton(isLightBg: effectiveBg != AppColors.primary),
-            const SizedBox(width: 8),
+            _buildCircularBackButton(),
+            const SizedBox(width: 10),
           ],
 
           // Tiêu đề màn hình
           Text(
             title ?? 'Histoquest',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 21,
               fontWeight: FontWeight.w800,
-              color: effectiveBg == AppColors.primary ? Colors.white : AppColors.textPrimary,
+              color: AppColors.textPrimary,
               letterSpacing: -0.5,
             ),
           ),
@@ -174,55 +163,56 @@ class HistoquestTopHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildCircularBackButton({bool isLightBg = false}) {
+  Widget _buildCircularBackButton() {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onBack,
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          width: 38,
-          height: 38,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
-            color: isLightBg ? Colors.white : Colors.white.withValues(alpha: 0.22),
+            color: Colors.white,
             shape: BoxShape.circle,
             border: Border.all(
-              color: isLightBg ? const Color(0xFFDED4C4) : Colors.white.withValues(alpha: 0.35),
-              width: 1.2,
+              color: const Color(0xFF8C867A).withValues(alpha: 0.35),
+              width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isLightBg ? 0.06 : 0.12),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 4,
-                offset: const Offset(0, 1.5),
+                offset: const Offset(0, 1),
               ),
             ],
           ),
-          child: Icon(
-            Icons.arrow_back_rounded,
-            color: isLightBg ? AppColors.textPrimary : Colors.white,
-            size: 20,
+          child: const Center(
+            child: Icon(
+              Icons.arrow_back_rounded,
+              color: Color(0xFF2C2A28),
+              size: 21,
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildCountryFlag(String? emoji, {double width = 38, double height = 26}) {
+  Widget _buildCountryFlag(String? emoji) {
     final isVn = countryName == null || countryName!.toLowerCase().contains('việt');
     if (isVn) {
       return Container(
-        width: width,
-        height: height,
+        width: 32,
+        height: 24,
         decoration: BoxDecoration(
           color: const Color(0xFFDA251D),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.white, width: 1.5),
+          borderRadius: BorderRadius.circular(5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.12),
               blurRadius: 3,
-              offset: const Offset(0, 1.5),
+              offset: const Offset(0, 1),
             ),
           ],
         ),
@@ -230,7 +220,7 @@ class HistoquestTopHeader extends StatelessWidget {
           child: Icon(
             Icons.star_rounded,
             color: Color(0xFFFFEB3B),
-            size: 16,
+            size: 15,
           ),
         ),
       );
@@ -238,8 +228,8 @@ class HistoquestTopHeader extends StatelessWidget {
 
     if (emoji != null && emoji.isNotEmpty) {
       return Container(
-        width: width,
-        height: height,
+        width: 32,
+        height: 24,
         alignment: Alignment.center,
         child: Text(
           emoji,
@@ -248,20 +238,24 @@ class HistoquestTopHeader extends StatelessWidget {
       );
     }
 
-    return SizedBox(width: width, height: height);
+    return const SizedBox(width: 32, height: 24);
   }
 
   Widget _buildPill({required Widget icon, required String label}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFFE2D9CB),
+          width: 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 4,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -273,7 +267,7 @@ class HistoquestTopHeader extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              fontSize: 12.5,
+              fontSize: 12.0,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),

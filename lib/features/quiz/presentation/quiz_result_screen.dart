@@ -201,7 +201,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
         height: 120,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFFE4A93A), Color(0xFFD95D39)],
+            colors: [Color(0xFFE4A93A), AppColors.primary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
