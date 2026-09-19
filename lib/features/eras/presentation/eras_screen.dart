@@ -125,12 +125,13 @@ class _ErasScreenState extends State<ErasScreen> {
       backgroundColor: backgroundColor,
       body: Column(
         children: [
-          // 2. Thanh AppBar / Header tùy biến với màu chủ đạo
+          // 2. Thanh AppBar / Header tùy biến
           HistoquestTopHeader(
             isEraMode: activeCountry != null,
             countryName: activeCountry?.name,
             countryFlagEmoji: activeCountry?.flagEmoji,
-            onBack: _backToCountrySelect,
+            onBack: activeCountry != null ? _backToCountrySelect : null,
+            backgroundColor: activeCountry != null ? backgroundColor : null,
             coins: _user.coins,
             streakDays: _user.streakDays,
           ),
