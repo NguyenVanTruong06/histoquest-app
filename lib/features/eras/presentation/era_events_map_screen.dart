@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show DisplayFeatureType;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -250,6 +251,28 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
     );
   }
 
+  /// Chiều cao vùng camera/tai thỏ (display cutout) ở mép trên mà nội dung
+  /// cần tránh, tính theo dp.
+  ///
+  /// `main.dart` chạy chế độ immersive và gọi `removePadding(removeTop: true)`
+  /// nên `SafeArea`/`MediaQuery.padding` luôn = 0 → header bị camera đè. Vì vậy
+  /// ta đọc trực tiếp từ `View` (padding gốc của hệ thống, gồm cả cutout) và từ
+  /// `displayFeatures` (vùng cutout), rồi lấy giá trị lớn nhất.
+  double _cutoutTopInset(BuildContext context) {
+    final view = View.of(context);
+    final rawTop = view.padding.top / view.devicePixelRatio;
+
+    double cutoutBottom = 0;
+    for (final f in MediaQuery.of(context).displayFeatures) {
+      if (f.type == DisplayFeatureType.cutout && f.bounds.top <= 1) {
+        cutoutBottom = math.max(cutoutBottom, f.bounds.bottom);
+      }
+    }
+
+    final already = MediaQuery.paddingOf(context).top;
+    return math.max(0.0, math.max(rawTop, cutoutBottom) - already);
+  }
+
   @override
   Widget build(BuildContext context) {
     final events = _era.events;
@@ -291,6 +314,7 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
               userCoins: user.coins,
               streakDays: user.streakDays,
               onBack: () => context.pop(),
+              topInset: _cutoutTopInset(context),
             ),
 
             // 2. Khu vực Bản đồ dọc Kingdom Rush — hoặc trạng thái "đang cập

@@ -15,6 +15,9 @@ class EraMapHeader extends StatelessWidget {
   final int streakDays;
   final VoidCallback onBack;
 
+  /// Khoảng đệm phía trên để tránh camera / tai thỏ.
+  final double topInset;
+
   const EraMapHeader({
     super.key,
     required this.era,
@@ -24,6 +27,7 @@ class EraMapHeader extends StatelessWidget {
     required this.userCoins,
     required this.streakDays,
     required this.onBack,
+    this.topInset = 0,
   });
 
   @override
@@ -31,7 +35,7 @@ class EraMapHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: const Color(0xFFE2D4AC), // cùng màu đầu giấy của nền bản đồ
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
+      padding: EdgeInsets.fromLTRB(14, 6 + topInset, 14, 6),
       child: Row(
         children: [
           Material(
