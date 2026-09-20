@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/config/feature_flags.dart';
+import '../../features/chatbot/presentation/mascot_chatbot_sheet.dart';
 
 /// Item dữ liệu cho từng tab trên Floating Pill Dock
 class FloatingNavItem {
@@ -17,12 +19,13 @@ class FloatingNavItem {
 /// Chuẩn phong cách iOS / Clean UI:
 /// - Phần 1: Dock chức năng chính (Bên trái, dạng viên thuốc bo tròn lớn `BorderRadius.circular(35)`),
 ///   chứa 4 tab điều hướng với hiệu ứng pill xanh active `Color(0xFFE8F1FD)` và icon/text `Color(0xFF1976D2)`.
-/// - Phần 2: Nút Cài đặt độc lập (Bên phải, hình tròn hoàn hảo 56x56), tách riêng biệt,
-///   khi được chọn đổi icon sang màu xanh.
+/// - Phần 2: Cột bên phải chứa Nút Cài đặt độc lập (56x56) và Nút Chatbot Linh Vật (52x52)
+///   nằm ngay phía trên nút Cài đặt (quản lý qua `FeatureFlags.enableAiChatbot`).
 class CustomFloatingBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final VoidCallback onSettingsTap;
+  final VoidCallback? onChatbotTap;
   final bool isSettingsSelected;
   final List<FloatingNavItem> items;
 
@@ -31,6 +34,7 @@ class CustomFloatingBottomNav extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     required this.onSettingsTap,
+    this.onChatbotTap,
     this.isSettingsSelected = false,
     this.items = const [
       FloatingNavItem(
@@ -64,7 +68,7 @@ class CustomFloatingBottomNav extends StatelessWidget {
         bottom: bottomSafeArea > 0 ? bottomSafeArea + 6 : 16,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // ===================================================================
           // PHẦN 1: DOCK CHỨC NĂNG CHÍNH (Viên thuốc lớn bên trái)
@@ -110,49 +114,168 @@ class CustomFloatingBottomNav extends StatelessWidget {
           const SizedBox(width: 10),
 
           // ===================================================================
-          // PHẦN 2: NÚT CÀI ĐẶT ĐỘC LẬP (Hình tròn hoàn hảo bên phải)
+          // PHẦN 2: CỘT NÚT CÀI ĐẶT & CHATBOT LINH VẬT
           // ===================================================================
-          Container(
-            width: 56,
-            height: 56,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Nút Chatbot Linh Vật Văn Miếu Thư Sinh Ngưu (Nằm ngay trên icon Cài đặt)
+              // Tự động ẩn hoàn toàn khi FeatureFlags.enableAiChatbot == false
+              if (FeatureFlags.enableAiChatbot) ...[
+                _buildChatbotButton(context),
+                const SizedBox(height: 8),
+              ],
+
+              // Nút Cài đặt độc lập (Hình tròn 56x56)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: _buildSettingsButton(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Nút Chatbot Trợ lý Sử Ký AI (Văn Miếu Thư Sinh Ngưu)
+  Widget _buildChatbotButton(BuildContext context) {
+    return Tooltip(
+      message: 'Trợ lý Sử Ký Bé Sửu (Đang phát triển)',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (onChatbotTap != null) {
+              onChatbotTap!();
+            } else {
+              MascotChatbotSheet.show(context);
+            }
+          },
+          customBorder: const CircleBorder(),
+          splashColor: const Color(0xFFFFF8E1),
+          highlightColor: const Color(0xFFFFFDE7),
+          child: Container(
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFFC89B3C), // Viền vàng đồng hoàng gia
+                width: 2,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 18,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 5),
+                  color: const Color(0xFFC89B3C).withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 2),
                 ),
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 6,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 1),
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onSettingsTap,
-                customBorder: const CircleBorder(),
-                splashColor: const Color(0xFFE8F1FD),
-                highlightColor: const Color(0xFFF5F7FB),
-                child: Center(
-                  child: Icon(
-                    Icons.settings_rounded,
-                    size: 26,
-                    color: isSettingsSelected
-                        ? const Color(0xFF1976D2)
-                        : const Color(0xFF262626),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                ClipOval(
+                  child: Image.asset(
+                    'assets/images/mascot/thu_sinh_nguu_avatar.jpg',
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Center(
+                      child: Icon(
+                        Icons.smart_toy_rounded,
+                        color: Color(0xFF2E7D32),
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                // Huy hiệu "AI" nhỏ ở góc trên bên phải
+                Positioned(
+                  top: -2,
+                  right: -2,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFE65100), Color(0xFFFF8F00)],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 3,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'AI',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Nút Cài đặt độc lập
+  Widget _buildSettingsButton() {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 18,
+            spreadRadius: 0,
+            offset: const Offset(0, 5),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            spreadRadius: 0,
+            offset: const Offset(0, 1),
+          ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onSettingsTap,
+          customBorder: const CircleBorder(),
+          splashColor: const Color(0xFFE8F1FD),
+          highlightColor: const Color(0xFFF5F7FB),
+          child: Center(
+            child: Icon(
+              Icons.settings_rounded,
+              size: 26,
+              color: isSettingsSelected
+                  ? const Color(0xFF1976D2)
+                  : const Color(0xFF262626),
+            ),
+          ),
+        ),
       ),
     );
   }
