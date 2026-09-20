@@ -12,6 +12,7 @@ import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/stat_badge.dart';
 import '../../../shared/widgets/app_modal_dialog.dart';
 import '../../../shared/widgets/app_empty_view.dart';
+import 'widgets/antique_map_background_painter.dart';
 import 'widgets/era_map_header.dart';
 import 'widgets/map_winding_path_painter.dart';
 import 'widgets/map_event_node.dart';
@@ -276,7 +277,7 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFD7C79E),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -337,7 +338,18 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          // 2.1. Vẽ đường uốn lượn Bezier board game ở lớp nền
+                          // 2.0. Nền địa đồ cổ phong (giấy da dê, núi thuỷ mặc,
+                          // sông, tùng bách, mây tường vân) — tĩnh nên cô lập
+                          // repaint để cuộn mượt.
+                          const Positioned.fill(
+                            child: RepaintBoundary(
+                              child: CustomPaint(
+                                painter: AntiqueMapBackgroundPainter(),
+                              ),
+                            ),
+                          ),
+
+                          // 2.1. Đường cổ đạo uốn lượn, dát vàng đoạn đã đi
                           Positioned.fill(
                             child: CustomPaint(
                               painter: MapWindingPathPainter(
@@ -348,34 +360,11 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
                             ),
                           ),
 
-                          // 2.2. Điểm xuất phát (Cột mốc mở đầu)
+                          // 2.2. Điểm xuất phát: cờ trận "XUẤT QUÂN"
                           Positioned(
-                            left: nodePositions.first.dx - 45,
-                            top: nodePositions.first.dy - 65,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF4A443D),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.white, width: 1.5),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.flag_rounded, color: AppColors.gold, size: 14),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'XUẤT PHÁT',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            left: nodePositions.first.dx - 52,
+                            top: nodePositions.first.dy - 68,
+                            child: _buildStartBanner(),
                           ),
 
                           // 2.3. Dựng các Node sự kiện nối liền nhau, phân loại
@@ -451,33 +440,76 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
     );
   }
 
-  /// Khối cán đích ở cuối bản đồ, sau khi hạ Boss
+  /// Cờ trận "XUẤT QUÂN" ở điểm khởi hành.
+  Widget _buildStartBanner() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFA8362B), Color(0xFF5A1712)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFF6D66F), width: 1.6),
+        boxShadow: const [
+          BoxShadow(color: Color(0x552B2119), offset: Offset(0, 3), blurRadius: 5),
+        ],
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.flag_rounded, color: Color(0xFFF6D66F), size: 14),
+          SizedBox(width: 4),
+          Text(
+            'XUẤT QUÂN',
+            style: TextStyle(
+              color: Color(0xFFFFF3C4),
+              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// "KHẢI HOÀN MÔN" / bia công thần ở cuối bản đồ, sau khi hạ Boss.
   Widget _buildEraEndCheckpoint() {
+    const gold = Color(0xFFF6D66F);
+    const goldDeep = Color(0xFFB9861F);
     return Container(
       width: 170,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2DDD2), width: 2),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF7A4A26), Color(0xFF4A2A15)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(26),
+          topRight: Radius.circular(26),
+          bottomLeft: Radius.circular(6),
+          bottomRight: Radius.circular(6),
+        ),
+        border: Border.all(color: goldDeep, width: 2.5),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0x153A2A1A),
-            offset: Offset(0, 4),
-            blurRadius: 10,
-          ),
+          BoxShadow(color: Color(0x662B2119), offset: Offset(0, 4), blurRadius: 8),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFF3D6),
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
+              color: const Color(0xFF2B2119),
+              border: Border.all(color: gold, width: 1.5),
             ),
-            child: const Icon(Icons.military_tech_rounded, color: AppColors.gold, size: 24),
+            child: const Icon(Icons.military_tech_rounded, color: gold, size: 22),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -486,12 +518,12 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'HOÀN THÀNH',
+                  'KHẢI HOÀN MÔN',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFFB57715),
-                    letterSpacing: 0.5,
+                    color: gold,
+                    letterSpacing: 0.6,
                   ),
                 ),
                 Text(
@@ -499,7 +531,7 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: Color(0xFFFFF3C4),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
