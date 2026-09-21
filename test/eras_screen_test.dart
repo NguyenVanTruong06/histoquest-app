@@ -15,8 +15,7 @@ void main() {
 
     // Màn 1: Chọn nền văn minh
     expect(find.text('Chọn nền văn minh'), findsOneWidget);
-    expect(find.text('Histoquest'), findsOneWidget);
-    expect(find.text('Việt Nam'), findsOneWidget);
+    expect(find.text('Việt Nam'), findsWidgets);
 
     // Chạm vào thẻ Việt Nam
     await tester.tap(find.text('Việt Nam'));

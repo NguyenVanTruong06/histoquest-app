@@ -36,7 +36,6 @@ const Color _kWood = Color(0xFF6A3E22);
 const Color _kWoodDark = Color(0xFF4A2A15);
 const Color _kGoldLight = Color(0xFFF6D66F);
 const Color _kGoldDeep = Color(0xFFB9861F);
-const Color _kJade = Color(0xFF3F9A86);
 const Color _kJadeDark = Color(0xFF1F6656);
 const Color _kStone = Color(0xFFB9B1A0);
 const Color _kStoneDark = Color(0xFF8C8471);

@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/country_model.dart';
 import '../../../data/models/period_item.dart';
-import '../../../data/models/user_model.dart';
 import '../../../data/mock_data.dart';
 import 'widgets/beanstalk_pathway_painter.dart';
 import 'widgets/country_page_card.dart';
@@ -30,7 +29,6 @@ class ErasScreen extends StatefulWidget {
 }
 
 class _ErasScreenState extends State<ErasScreen> {
-  final UserModel _user = MockData.currentUser;
   final List<CountryModel> _countries = MockData.countries;
 
   /// Nền văn minh đang được xem trong tab này. `null` = đang ở bước chọn nền văn minh.

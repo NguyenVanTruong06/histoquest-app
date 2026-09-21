@@ -7,20 +7,25 @@ class FloatingNavItem {
   final String label;
   final IconData icon;
   final String? badge;
+  final Color? activeColor;
+  final Color? activeBgColor;
 
   const FloatingNavItem({
     required this.label,
     required this.icon,
     this.badge,
+    this.activeColor,
+    this.activeBgColor,
   });
 }
 
 /// Custom Floating Bottom Navigation Bar dạng nổi (Floating Dual-Dock)
-/// Chuẩn phong cách iOS / Clean UI:
-/// - Phần 1: Dock chức năng chính (Bên trái, dạng viên thuốc bo tròn lớn `BorderRadius.circular(35)`),
-///   chứa 4 tab điều hướng với hiệu ứng pill xanh active `Color(0xFFE8F1FD)` và icon/text `Color(0xFF1976D2)`.
-/// - Phần 2: Cột bên phải chứa Nút Cài đặt độc lập (56x56) và Nút Chatbot Linh Vật (52x52)
-///   nằm ngay phía trên nút Cài đặt (quản lý qua `FeatureFlags.enableAiChatbot`).
+/// Phong cách iOS / Clean UI & Dynamic Theme theo từng trang:
+/// - Tab 0 (Bản đồ): Lam ngọc lịch sử (Sky Cyan #0284C7 / #E0F2FE)
+/// - Tab 1 (Bảng vàng): Vàng kim hoàng gia (Royal Amber #D97706 / #FEF3C7)
+/// - Tab 2 (Trò chơi): Tím năng lượng Kỳ Đài (Arcade Purple #7C3AED / #EDE9FE)
+/// - Tab 3 (Bản tin): Xanh trúc tri thức (Bamboo Green #16A34A / #DCFCE7)
+/// - Nút Cài đặt (Slate Trầm) & Chatbot linh vật đồng bộ hài hòa.
 class CustomFloatingBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -40,26 +45,46 @@ class CustomFloatingBottomNav extends StatelessWidget {
       FloatingNavItem(
         label: 'Bản đồ',
         icon: Icons.map_rounded,
+        activeColor: Color(0xFF0284C7),
+        activeBgColor: Color(0xFFE0F2FE),
       ),
       FloatingNavItem(
         label: 'Bảng vàng',
         icon: Icons.emoji_events_rounded,
+        activeColor: Color(0xFFD97706),
+        activeBgColor: Color(0xFFFEF3C7),
       ),
       FloatingNavItem(
         label: 'Trò chơi',
         icon: Icons.sports_esports_rounded,
+        activeColor: Color(0xFF7C3AED),
+        activeBgColor: Color(0xFFEDE9FE),
       ),
       FloatingNavItem(
         label: 'Bản tin',
         icon: Icons.newspaper_rounded,
+        activeColor: Color(0xFF16A34A),
+        activeBgColor: Color(0xFFDCFCE7),
         badge: '3',
       ),
     ],
   });
 
+  /// Màu active chủ đạo hiện tại của trang
+  Color _getCurrentActiveColor() {
+    if (isSettingsSelected) {
+      return const Color(0xFF475569);
+    }
+    if (currentIndex >= 0 && currentIndex < items.length) {
+      return items[currentIndex].activeColor ?? const Color(0xFF0284C7);
+    }
+    return const Color(0xFF0284C7);
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomSafeArea = MediaQuery.paddingOf(context).bottom;
+    final activeThemeColor = _getCurrentActiveColor();
 
     return Padding(
       padding: EdgeInsets.only(
@@ -74,23 +99,31 @@ class CustomFloatingBottomNav extends StatelessWidget {
           // PHẦN 1: DOCK CHỨC NĂNG CHÍNH (Viên thuốc lớn bên trái)
           // ===================================================================
           Expanded(
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
               height: 64,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(35),
+                border: Border.all(
+                  color: isSettingsSelected
+                      ? const Color(0xFFE2E8F0)
+                      : activeThemeColor.withValues(alpha: 0.22),
+                  width: 1.2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
+                    color: activeThemeColor.withValues(alpha: 0.12),
                     blurRadius: 18,
                     spreadRadius: 0,
-                    offset: const Offset(0, 5),
+                    offset: const Offset(0, 6),
                   ),
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 6,
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
                     spreadRadius: 0,
-                    offset: const Offset(0, 1),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -120,7 +153,6 @@ class CustomFloatingBottomNav extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Nút Chatbot Linh Vật Văn Miếu Thư Sinh Ngưu (Nằm ngay trên icon Cài đặt)
-              // Tự động ẩn hoàn toàn khi FeatureFlags.enableAiChatbot == false
               if (FeatureFlags.enableAiChatbot) ...[
                 _buildChatbotButton(context),
                 const SizedBox(height: 8),
@@ -162,19 +194,19 @@ class CustomFloatingBottomNav extends StatelessWidget {
               color: Colors.white,
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFFC89B3C), // Viền vàng đồng hoàng gia
+                color: const Color(0xFFE4A93A), // Viền vàng hoàng gia
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFC89B3C).withValues(alpha: 0.35),
+                  color: const Color(0xFFE4A93A).withValues(alpha: 0.3),
                   blurRadius: 10,
                   spreadRadius: 1,
                   offset: const Offset(0, 2),
                 ),
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 8,
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
@@ -238,24 +270,32 @@ class CustomFloatingBottomNav extends StatelessWidget {
 
   /// Nút Cài đặt độc lập
   Widget _buildSettingsButton() {
-    return Container(
+    final activeBgColor = isSettingsSelected ? const Color(0xFFF1F5F9) : Colors.white;
+    final iconColor = isSettingsSelected
+        ? const Color(0xFF334155)
+        : const Color(0xFF64748B);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
       width: 56,
       height: 56,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: activeBgColor,
         shape: BoxShape.circle,
+        border: Border.all(
+          color: isSettingsSelected
+              ? const Color(0xFF94A3B8)
+              : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 18,
+            color: isSettingsSelected
+                ? const Color(0xFF475569).withValues(alpha: 0.18)
+                : Colors.black.withValues(alpha: 0.06),
+            blurRadius: 14,
             spreadRadius: 0,
-            offset: const Offset(0, 5),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            spreadRadius: 0,
-            offset: const Offset(0, 1),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -264,15 +304,13 @@ class CustomFloatingBottomNav extends StatelessWidget {
         child: InkWell(
           onTap: onSettingsTap,
           customBorder: const CircleBorder(),
-          splashColor: const Color(0xFFE8F1FD),
-          highlightColor: const Color(0xFFF5F7FB),
+          splashColor: const Color(0xFFE2E8F0),
+          highlightColor: const Color(0xFFF8FAFC),
           child: Center(
             child: Icon(
               Icons.settings_rounded,
-              size: 26,
-              color: isSettingsSelected
-                  ? const Color(0xFF1976D2)
-                  : const Color(0xFF262626),
+              size: 25,
+              color: iconColor,
             ),
           ),
         ),
@@ -285,10 +323,10 @@ class CustomFloatingBottomNav extends StatelessWidget {
     required bool isSelected,
     required int index,
   }) {
-    const activeBgColor = Color(0xFFE8F1FD);
-    const activeColor = Color(0xFF1976D2);
-    const inactiveColor = Color(0xFF2E2E2E);
-    const inactiveTextColor = Color(0xFF383838);
+    final activeColor = item.activeColor ?? const Color(0xFF0284C7);
+    final activeBgColor = item.activeBgColor ?? const Color(0xFFE0F2FE);
+    const inactiveIconColor = Color(0xFF64748B);
+    const inactiveTextColor = Color(0xFF64748B);
 
     return Material(
       color: Colors.transparent,
@@ -297,7 +335,7 @@ class CustomFloatingBottomNav extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         splashColor: activeBgColor,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 240),
           curve: Curves.easeOutCubic,
           padding: EdgeInsets.symmetric(
             horizontal: isSelected ? 10 : 4,
@@ -306,6 +344,12 @@ class CustomFloatingBottomNav extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected ? activeBgColor : Colors.transparent,
             borderRadius: BorderRadius.circular(22),
+            border: isSelected
+                ? Border.all(
+                    color: activeColor.withValues(alpha: 0.18),
+                    width: 1,
+                  )
+                : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -315,10 +359,15 @@ class CustomFloatingBottomNav extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Icon(
-                    item.icon,
-                    size: 22,
-                    color: isSelected ? activeColor : inactiveColor,
+                  AnimatedScale(
+                    scale: isSelected ? 1.08 : 1.0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOutBack,
+                    child: Icon(
+                      item.icon,
+                      size: 22,
+                      color: isSelected ? activeColor : inactiveIconColor,
+                    ),
                   ),
                   if (item.badge != null)
                     Positioned(
@@ -330,9 +379,16 @@ class CustomFloatingBottomNav extends StatelessWidget {
                           vertical: 1.5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF03D3D),
+                          color: const Color(0xFFEF4444),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.white, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
                         constraints: const BoxConstraints(minWidth: 16),
                         child: Text(

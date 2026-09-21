@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/landscape_game_wrapper.dart';
 import '../../domain/models/game_item_model.dart';
 
+
 /// Modal Bottom Sheet hiển thị thông tin tổng quan về chế độ chơi, luật chơi và phần thưởng
 class GameModeDetailSheet extends StatelessWidget {
   final GameItemModel game;
@@ -267,10 +268,9 @@ class GameModeDetailSheet extends StatelessWidget {
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                  if (game.isPlayable && game.screenBuilder != null) {
+                  if (game.isPlayable) {
                     Navigator.pop(context); // Đóng modal
-                    Navigator.push(
-                      context,
+                    Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(
                         builder: (context) {
                           final screen = game.screenBuilder!(context);

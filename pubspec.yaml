@@ -71,6 +71,7 @@ flutter:
     - assets/images/countries/
     - assets/images/eras/
     - assets/images/mascot/
+    - assets/images/games/
     - assets/data/
 
   # An image asset can refer to one or more resolution-specific "variants", see

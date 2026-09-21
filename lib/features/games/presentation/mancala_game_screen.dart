@@ -253,64 +253,74 @@ class _MancalaGameScreenState extends State<MancalaGameScreen> {
 
             const Divider(height: 1, color: Color(0xFFE2DDD2)),
 
-            // 2. Nội dung ván cờ (portrait): bảng điểm ở trên, bàn cờ ở
-            // giữa, 2 nút tiện ích xếp cạnh nhau ở dưới cùng — xếp chồng
-            // dọc thay vì đặt sidebar điểm + bàn cờ cạnh nhau như bản
-            // landscape trước đây.
+            // 2. Nội dung ván cờ (Landscape Mode): Sidebar Bảng điểm (Trái) & Bàn cờ (Phải)
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                child: Column(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
                   children: [
-                    // Bảng điểm & chỉ số lượt chơi
-                    MancalaScoreboard(
-                      playerScore: _engine.playerScore,
-                      aiScore: _engine.aiScore,
-                      currentTurn: _engine.currentTurn,
-                      statusMessage: _engine.statusMessage,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Bàn cờ Ô Ăn Quan 3D
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: MancalaBoard(
-                        pits: _engine.pits,
-                        selectedPit: _selectedPit,
-                        isPlayerTurn: _engine.currentTurn == GameTurn.player,
-                        isMoving: _isMoving,
-                        onPitTap: _handlePitTap,
-                        onDirectionSelect: _handleDirectionSelect,
+                    // Cột Trái (Sidebar): Bảng điểm & Nút bấm (Rộng ~ 30%)
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              child: MancalaScoreboard(
+                                playerScore: _engine.playerScore,
+                                aiScore: _engine.aiScore,
+                                currentTurn: _engine.currentTurn,
+                                statusMessage: _engine.statusMessage,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Nút tiện ích xếp cạnh nhau dưới bảng điểm
+                          Row(
+                            children: [
+                              Expanded(
+                                child: SecondaryButton(
+                                  label: 'Luật Chơi',
+                                  height: 46,
+                                  icon: const Icon(Icons.menu_book_rounded, color: AppColors.primaryDark, size: 18),
+                                  onPressed: _showRulesSheet,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: PrimaryButton(
+                                  label: 'Tổng Kết Ván',
+                                  height: 46,
+                                  icon: const Icon(Icons.flag_rounded, color: Colors.white, size: 18),
+                                  onPressed: () {
+                                    _engine.endGame();
+                                    _showGameOverDialog();
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(width: 24),
 
-                    // Nút tiện ích xếp cạnh nhau
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SecondaryButton(
-                            label: 'Luật Chơi',
-                            height: 46,
-                            icon: const Icon(Icons.menu_book_rounded, color: AppColors.primaryDark, size: 18),
-                            onPressed: _showRulesSheet,
+                    // Cột Phải: Bàn cờ 3D (Rộng ~ 70%)
+                    Expanded(
+                      flex: 7,
+                      child: Center(
+                        child: SingleChildScrollView(
+                          child: MancalaBoard(
+                            pits: _engine.pits,
+                            selectedPit: _selectedPit,
+                            isPlayerTurn: _engine.currentTurn == GameTurn.player,
+                            isMoving: _isMoving,
+                            onPitTap: _handlePitTap,
+                            onDirectionSelect: _handleDirectionSelect,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: PrimaryButton(
-                            label: 'Tổng Kết Ván',
-                            height: 46,
-                            icon: const Icon(Icons.flag_rounded, color: Colors.white, size: 18),
-                            onPressed: () {
-                              _engine.endGame();
-                              _showGameOverDialog();
-                            },
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
