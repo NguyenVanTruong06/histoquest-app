@@ -34,7 +34,6 @@ class EraMapHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFE2D4AC), // cùng màu đầu giấy của nền bản đồ
       padding: EdgeInsets.fromLTRB(14, 6 + topInset, 14, 6),
       child: Row(
         children: [

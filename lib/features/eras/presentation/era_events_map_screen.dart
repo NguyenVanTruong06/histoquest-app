@@ -299,14 +299,7 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
       activeIdx = (completedIdx + 1).clamp(0, events.length - 1);
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFD7C79E),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // 1. Header thời kỳ & Stats
-            EraMapHeader(
+    final header = EraMapHeader(
               era: _era,
               completedCount: events.where((e) => e.isCompleted).length,
               totalCount: events.length,
@@ -314,8 +307,21 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
               userCoins: user.coins,
               streakDays: user.streakDays,
               onBack: () => context.pop(),
-              topInset: _cutoutTopInset(context),
-            ),
+              // Tối thiểu 32dp để luôn né camera/status bar dù cutout không đọc được.
+              topInset: math.max(_cutoutTopInset(context), 32.0),
+            );
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFD7C79E),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Stack(
+          children: [
+            Column(
+          children: [
+            // 1. Header (chỉ nằm trong Column khi trạng thái rỗng)
+            if (events.isEmpty) header,
 
             // 2. Khu vực Bản đồ dọc Kingdom Rush — hoặc trạng thái "đang cập
             // nhật" nếu thời kỳ này chưa có mốc sự kiện nào.
@@ -340,7 +346,8 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
                   final mapWidth = math.min(screenWidth, 640.0);
                   final mapLeftOffset = (screenWidth - mapWidth) / 2;
                   const itemHeight = 185.0;
-                  const topOffset = 76.0;
+                  // Chừa chỗ cho header (đang phủ lên bản đồ) để node đầu không bị đè.
+                  final topOffset = 76.0 + math.max(_cutoutTopInset(context), 32.0) + 48.0;
                   final totalMapHeight = topOffset + (events.length * itemHeight) + 130.0;
 
                   // Tính toán tọa độ tâm của các Node theo đường cong uốn lượn
@@ -416,6 +423,12 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
                 },
               ),
             ),
+          ],
+            ),
+
+            // Header phủ lên bản đồ, mờ dần vào nền giấy khi cuộn.
+            if (events.isNotEmpty)
+              Positioned(top: 0, left: 0, right: 0, child: header),
           ],
         ),
       ),

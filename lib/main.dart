@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui' show DisplayFeatureType;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,13 +101,59 @@ class _HistoQuestAppState extends ConsumerState<HistoQuestApp>
       ),
       routerConfig: goRouter,
       builder: (context, child) {
+        final base = MediaQuery.of(context);
+
+        // Ở chế độ immersive Android báo padding.top = 0 nên nội dung bị
+        // camera / tai thỏ (display cutout) đè lên. Ta tự tính lại inset phía
+        // trên từ padding gốc của View (đã gồm cutout) và từ displayFeatures,
+        // rồi đưa lại vào MediaQuery để SafeArea / MediaQuery.padding trên MỌI
+        // màn hình tự né camera. Các cạnh khác vẫn giữ = 0 như cũ.
+        final view = View.of(context);
+        final rawTop = view.padding.top / view.devicePixelRatio;
+        // Hình chữ nhật cutout mà Android báo luôn "rộng rãi" hơn lỗ camera thật
+        // (kèm vùng đệm an toàn), nên nếu lấy nguyên đáy của nó thì dư một
+        // đoạn. Với camera đục lỗ (rect gần vuông) ta ước lượng đáy lỗ thật từ
+        // tâm + bán kính; với tai thỏ (rect dẹt, rộng) lấy nguyên đáy. Mọi số
+        // đều suy ra từ hình học do máy báo nên tự co giãn theo từng dòng máy.
+        double cutoutBottom = 0;
+        for (final f in base.displayFeatures) {
+          if (f.type != DisplayFeatureType.cutout || f.bounds.top > 1) continue;
+          final r = f.bounds;
+          final isPunchHole = r.width <= r.height * 1.6;
+          final bottom = isPunchHole
+              ? math.min(
+                  r.bottom,
+                  r.center.dy + math.min(r.width, r.height) * 0.35,
+                )
+              : r.bottom;
+          cutoutBottom = math.max(cutoutBottom, bottom);
+        }
+        // Lỗ camera nằm TRONG thanh trạng thái nên đáy lỗ luôn nhỏ hơn chiều
+        // cao thanh trạng thái (~75%). Lấy giá trị nhỏ nhất trong các ước lượng
+        // khả dụng để khoảng đệm chỉ vừa hết camera, tự co giãn theo từng máy.
+        final candidates = <double>[
+          if (cutoutBottom > 0) cutoutBottom,
+          if (rawTop > 0) rawTop * 0.75,
+        ];
+        final topInset = candidates.isEmpty ? 0.0 : candidates.reduce(math.min);
+        assert(() {
+          debugPrint('[CutoutInset] rawTop=$rawTop cutoutBottom=$cutoutBottom '
+              'features=${base.displayFeatures} -> topInset=$topInset');
+          return true;
+        }());
+
         return MediaQuery(
-          data: MediaQuery.of(context).removePadding(
-            removeLeft: true,
-            removeRight: true,
-            removeBottom: true,
-            removeTop: true,
-          ),
+          data: base
+              .removePadding(
+                removeLeft: true,
+                removeRight: true,
+                removeBottom: true,
+                removeTop: true,
+              )
+              .copyWith(
+                padding: EdgeInsets.only(top: topInset),
+                viewPadding: EdgeInsets.only(top: topInset),
+              ),
           // Nền màu game hiển thị xuyên qua thanh trạng thái/điều hướng
           // trong suốt (transparent) đã set ở SystemUiOverlayStyle bên trên.
           child: ColoredBox(

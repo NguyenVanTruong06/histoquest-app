@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/theme/app_colors.dart';
 
 /// Header HistoQuest thiết kế thanh thoát, màu nền trùng với background:
@@ -50,12 +51,7 @@ class HistoquestTopHeader extends StatelessWidget {
 
       return Container(
         width: double.infinity,
-        padding: EdgeInsets.only(
-          top: topPadding + 6,
-          bottom: 10,
-          left: 16,
-          right: 16,
-        ),
+        padding: EdgeInsets.only(top: 7, bottom: 10, left: 16, right: 16),
         color: effectiveBg,
         child: Row(
           children: [
@@ -154,10 +150,7 @@ class HistoquestTopHeader extends StatelessWidget {
             ),
           ],
 
-          if (extraAction != null) ...[
-            const SizedBox(width: 8),
-            extraAction!,
-          ],
+          if (extraAction != null) ...[const SizedBox(width: 8), extraAction!],
         ],
       ),
     );
@@ -200,7 +193,8 @@ class HistoquestTopHeader extends StatelessWidget {
   }
 
   Widget _buildCountryFlag(String? emoji) {
-    final isVn = countryName == null || countryName!.toLowerCase().contains('việt');
+    final isVn =
+        countryName == null || countryName!.toLowerCase().contains('việt');
     if (isVn) {
       return Container(
         width: 32,
@@ -217,11 +211,7 @@ class HistoquestTopHeader extends StatelessWidget {
           ],
         ),
         child: const Center(
-          child: Icon(
-            Icons.star_rounded,
-            color: Color(0xFFFFEB3B),
-            size: 15,
-          ),
+          child: Icon(Icons.star_rounded, color: Color(0xFFFFEB3B), size: 15),
         ),
       );
     }
@@ -231,10 +221,7 @@ class HistoquestTopHeader extends StatelessWidget {
         width: 32,
         height: 24,
         alignment: Alignment.center,
-        child: Text(
-          emoji,
-          style: const TextStyle(fontSize: 22),
-        ),
+        child: Text(emoji, style: const TextStyle(fontSize: 22)),
       );
     }
 
@@ -247,10 +234,7 @@ class HistoquestTopHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFE2D9CB),
-          width: 1.0,
-        ),
+        border: Border.all(color: const Color(0xFFE2D9CB), width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),

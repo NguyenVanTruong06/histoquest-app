@@ -1,3 +1,5 @@
+import 'dart:ui' show DisplayFeatureType;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -99,7 +101,9 @@ class _ErasScreenState extends State<ErasScreen> {
     if (!country.hasContent) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Nội dung ${country.name} đang được cập nhật, quay lại sau nhé!'),
+          content: Text(
+            'Nội dung ${country.name} đang được cập nhật, quay lại sau nhé!',
+          ),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -115,6 +119,22 @@ class _ErasScreenState extends State<ErasScreen> {
     setState(() => _activeCountryId = null);
   }
 
+  /// Khoảng đệm phía trên để né camera: lấy giá trị lớn nhất giữa padding hệ
+  /// thống, vùng cutout và mức tối thiểu 32dp.
+  double _topGap(BuildContext context) {
+    final view = View.of(context);
+    double gap = MediaQuery.paddingOf(context).top;
+    final rawTop = view.padding.top / view.devicePixelRatio;
+    if (rawTop > gap) gap = rawTop;
+    for (final f in MediaQuery.of(context).displayFeatures) {
+      if (f.type == DisplayFeatureType.cutout && f.bounds.top <= 1) {
+        if (f.bounds.bottom > gap) gap = f.bounds.bottom;
+      }
+    }
+    gap = gap - 30;
+    return gap < 0 ? 0 : gap;
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeCountry = _activeCountry;
@@ -125,16 +145,9 @@ class _ErasScreenState extends State<ErasScreen> {
       backgroundColor: backgroundColor,
       body: Column(
         children: [
-          // 2. Thanh AppBar / Header tùy biến
-          HistoquestTopHeader(
-            isEraMode: activeCountry != null,
-            countryName: activeCountry?.name,
-            countryFlagEmoji: activeCountry?.flagEmoji,
-            onBack: activeCountry != null ? _backToCountrySelect : null,
-            backgroundColor: backgroundColor,
-            coins: _user.coins,
-            streakDays: _user.streakDays,
-          ),
+          // Không còn header: chỉ chừa khoảng đệm phía trên để né camera /
+          // status bar (SafeArea bị vô hiệu do chế độ immersive nên tự đo).
+          SizedBox(height: _topGap(context)),
 
           // Thân màn hình theo từng bước
           Expanded(
@@ -182,7 +195,10 @@ class _ErasScreenState extends State<ErasScreen> {
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 18.0,
+              vertical: 4.0,
+            ),
             itemCount: _countries.length,
             itemBuilder: (context, index) {
               final country = _countries[index];
@@ -221,6 +237,14 @@ class _ErasScreenState extends State<ErasScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Nút quay lại + tên nước + cờ, KHÔNG có khung/nền (trong suốt).
+        HistoquestTopHeader(
+          isEraMode: true,
+          countryName: _activeCountry?.name,
+          onBack: _backToCountrySelect,
+          backgroundColor: Colors.transparent,
+        ),
+
         // Tiêu đề & Phụ đề ngay dưới Header
         const Padding(
           padding: EdgeInsets.fromLTRB(18.0, 16.0, 18.0, 8.0),
@@ -259,9 +283,7 @@ class _ErasScreenState extends State<ErasScreen> {
                 // 3. Trục dây leo (Beanstalk Pathway) trải dài dọc chính giữa
                 Positioned.fill(
                   child: CustomPaint(
-                    painter: BeanstalkPathwayPainter(
-                      itemCount: periods.length,
-                    ),
+                    painter: BeanstalkPathwayPainter(itemCount: periods.length),
                   ),
                 ),
 
