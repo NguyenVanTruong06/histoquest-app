@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' show DisplayFeatureType;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/year_format.dart';
@@ -118,6 +119,7 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
           size: 22,
         ),
         onPressed: () {
+          HapticFeedback.mediumImpact();
           Navigator.pop(context);
           context.push('/eras/${widget.eraId}/events/${event.id}');
         },
@@ -241,6 +243,7 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
 
   /// Thông báo khi bấm vào node đang khóa
   void _showLockedAlert(HistoricalEventModel event) {
+    HapticFeedback.heavyImpact();
     AppModalDialog.show(
       context,
       title: 'Mốc Sự Kiện Đang Khóa',
@@ -380,13 +383,15 @@ class _EraEventsMapScreenState extends State<EraEventsMapScreen> {
                             ),
                           ),
 
-                          // 2.1. Đường cổ đạo uốn lượn, dát vàng đoạn đã đi
+                          // 2.1. Đường cổ đạo uốn lượn, dát vàng đoạn đã đi (cô lập repaint)
                           Positioned.fill(
-                            child: CustomPaint(
-                              painter: MapWindingPathPainter(
-                                nodePositions: nodePositions,
-                                completedIndex: completedIdx,
-                                activeIndex: activeIdx,
+                            child: RepaintBoundary(
+                              child: CustomPaint(
+                                painter: MapWindingPathPainter(
+                                  nodePositions: nodePositions,
+                                  completedIndex: completedIdx,
+                                  activeIndex: activeIdx,
+                                ),
                               ),
                             ),
                           ),

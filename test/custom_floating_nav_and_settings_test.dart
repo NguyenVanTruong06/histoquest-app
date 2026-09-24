@@ -123,8 +123,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test sound toggle
-      expect(find.byType(CupertinoSwitch), findsOneWidget);
-      await tester.tap(find.byType(CupertinoSwitch));
+      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.pumpAndSettle();
+      final switchFinder = find.byType(CupertinoSwitch);
+      expect(switchFinder, findsOneWidget);
+      await tester.tap(switchFinder);
       await tester.pumpAndSettle();
     });
   });

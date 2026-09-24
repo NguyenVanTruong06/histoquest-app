@@ -37,37 +37,77 @@ class _ErasScreenState extends State<ErasScreen> {
   /// ID thời kỳ đang được chọn trên dòng thời gian dây leo
   String _selectedPeriodId = 'era_1';
 
-  // 4 thời kỳ mẫu (Mock Data) theo yêu cầu chuẩn gamification
+  // Các thời kỳ mẫu dự phòng theo chuẩn gamification
   final List<PeriodItem> _samplePeriods = const [
     PeriodItem(
       id: 'era_1',
-      title: 'Thời kì Tiền Sử',
+      title: 'Thời kỳ Tiền sử',
       subtitle: 'Khoảng 500.000 năm - 2879 TCN',
       imageUrl: 'assets/images/eras/prehistoric_cave_art.jpg',
       isSelected: true,
     ),
     PeriodItem(
-      id: 'era_ly_tran',
-      title: 'Thời kì Lý - Trần',
-      subtitle: 'Năm 1009 - 1400',
+      id: 'era_2',
+      title: 'Thời kỳ Cổ đại',
+      subtitle: 'Năm 2879 TCN - 938',
       imageUrl: 'assets/images/eras/dong_son_art.jpg',
       isSelected: false,
     ),
     PeriodItem(
-      id: 'era_khang_chien',
-      title: 'Thời kì Kháng Chiến',
-      subtitle: 'Năm 1945 - 1975',
+      id: 'era_3',
+      title: 'Thời kỳ Trung đại',
+      subtitle: 'Năm 938 - 1400',
+      imageUrl: 'assets/images/eras/dong_son_art.jpg',
+      isSelected: false,
+    ),
+    PeriodItem(
+      id: 'era_4',
+      title: 'Thời kỳ Cận đại',
+      subtitle: 'Năm 1400 - 1884',
       imageUrl: 'assets/images/countries/vn.jpg',
       isSelected: false,
     ),
     PeriodItem(
-      id: 'era_hien_dai',
-      title: 'Thời kỳ Hiện Đại',
+      id: 'era_5',
+      title: 'Thời kỳ Hiện đại',
+      subtitle: 'Năm 1884 - 1975',
+      imageUrl: 'assets/images/countries/vn.jpg',
+      isSelected: false,
+    ),
+    PeriodItem(
+      id: 'era_6',
+      title: 'Thời kỳ Đương đại',
       subtitle: 'Năm 1975 - Nay',
       imageUrl: 'assets/images/countries/vn.jpg',
       isSelected: false,
     ),
   ];
+
+  /// Danh sách thời kỳ động lấy từ MockData dựa theo quốc gia được chọn
+  List<PeriodItem> get _periods {
+    final countryEras = MockData.erasForSelectedCountry;
+    if (countryEras.isEmpty) {
+      return _samplePeriods.map((p) {
+        return p.copyWith(isSelected: p.id == _selectedPeriodId);
+      }).toList();
+    }
+    return countryEras.map((era) {
+      String image = 'assets/images/countries/vn.jpg';
+      if (era.id == 'era_1') {
+        image = 'assets/images/eras/prehistoric_cave_art.jpg';
+      } else if (era.id == 'era_2' || era.id == 'era_3') {
+        image = 'assets/images/eras/dong_son_art.jpg';
+      }
+      return PeriodItem(
+        id: era.id,
+        title: era.name,
+        subtitle: '${era.timelineSpan} · ${era.totalEvents} mốc',
+        imageUrl: image,
+        isSelected: era.id == _selectedPeriodId,
+        isUnlocked: era.isUnlocked,
+      );
+    }).toList();
+  }
 
   CountryModel? get _activeCountry {
     if (_activeCountryId == null) return null;
@@ -227,10 +267,8 @@ class _ErasScreenState extends State<ErasScreen> {
   // Bước 2: Chọn Thời Kì (SingleChildScrollView + Stack + BeanstalkPathway)
   // ---------------------------------------------------------------------
   Widget _buildErasBody() {
-    // Cập nhật trạng thái isSelected cho danh sách thời kỳ mẫu
-    final periods = _samplePeriods.map((p) {
-      return p.copyWith(isSelected: p.id == _selectedPeriodId);
-    }).toList();
+    // Danh sách thời kỳ động
+    final periods = _periods;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,8 +318,10 @@ class _ErasScreenState extends State<ErasScreen> {
               children: [
                 // 3. Trục dây leo (Beanstalk Pathway) trải dài dọc chính giữa
                 Positioned.fill(
-                  child: CustomPaint(
-                    painter: BeanstalkPathwayPainter(itemCount: periods.length),
+                  child: RepaintBoundary(
+                    child: CustomPaint(
+                      painter: BeanstalkPathwayPainter(itemCount: periods.length),
+                    ),
                   ),
                 ),
 
@@ -307,8 +347,8 @@ class _ErasScreenState extends State<ErasScreen> {
                               });
                             },
                             onEnterMap: () {
-                              // Điều hướng vào bản đồ sự kiện
-                              context.push('/eras/era_1');
+                              // Điều hướng vào bản đồ sự kiện tương ứng với thời kỳ được chọn
+                              context.push('/eras/${periods[i].id}');
                             },
                           ),
                         ),

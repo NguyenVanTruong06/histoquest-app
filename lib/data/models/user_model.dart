@@ -7,6 +7,7 @@ class UserModel {
   final int coins;
   final int xp;
   final int totalQuestsCompleted;
+  final int weeklyXp;
   final String? avatarUrl;
   final String currentBannerId;
   final String currentFrameId;
@@ -20,6 +21,7 @@ class UserModel {
     this.streakDays = 0,
     this.coins = 0,
     this.xp = 0,
+    this.weeklyXp = 350,
     this.totalQuestsCompleted = 0,
     this.avatarUrl,
     this.currentBannerId = 'banner_default',
@@ -35,6 +37,7 @@ class UserModel {
     int? streakDays,
     int? coins,
     int? xp,
+    int? weeklyXp,
     int? totalQuestsCompleted,
     String? avatarUrl,
     String? currentBannerId,
@@ -49,6 +52,7 @@ class UserModel {
       streakDays: streakDays ?? this.streakDays,
       coins: coins ?? this.coins,
       xp: xp ?? this.xp,
+      weeklyXp: weeklyXp ?? this.weeklyXp,
       totalQuestsCompleted: totalQuestsCompleted ?? this.totalQuestsCompleted,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       currentBannerId: currentBannerId ?? this.currentBannerId,
@@ -66,6 +70,7 @@ class UserModel {
       'streakDays': streakDays,
       'coins': coins,
       'xp': xp,
+      'weeklyXp': weeklyXp,
       'totalQuestsCompleted': totalQuestsCompleted,
       'avatarUrl': avatarUrl,
       'currentBannerId': currentBannerId,

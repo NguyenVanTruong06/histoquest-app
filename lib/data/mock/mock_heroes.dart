@@ -1,0 +1,55 @@
+import '../models/hero_card_model.dart';
+
+/// Danh sách thẻ danh tướng thu thập được
+final List<HeroCardModel> kMockHeroCards = [
+  const HeroCardModel(
+    id: 'card_ngo_quyen',
+    heroName: 'Ngô Quyền',
+    stars: 3,
+    era: 'Thế kỷ 10',
+    title: 'Tiền Ngô Vương',
+    quote: 'Tiền Ngô Vương có thể lấy quân mới nhóm họp của đất Việt ta mà phá được trăm vạn quân của Lưu Hoằng Tháo.',
+    description: 'Anh hùng dân tộc chấm dứt hơn 1000 năm Bắc thuộc bằng trận đại thắng cọc ngầm trên sông Bạch Đằng năm 938.',
+    isCollected: true,
+  ),
+  const HeroCardModel(
+    id: 'card_dinh_bo_linh',
+    heroName: 'Đinh Bộ Lĩnh',
+    stars: 3,
+    era: 'Thế kỷ 10',
+    title: 'Vạn Thắng Vương · Đinh Tiên Hoàng',
+    quote: 'Lấy cờ lau tập trận, bình định 12 sứ quân thu giang sơn về một mối.',
+    description: 'Người dẹp loạn 12 sứ quân, lập nên nhà nước phong kiến tập quyền đầu tiên Đại Cồ Việt, xưng Hoàng đế năm 968.',
+    isCollected: false,
+  ),
+  const HeroCardModel(
+    id: 'card_ly_thuong_kiet',
+    heroName: 'Lý Thường Kiệt',
+    stars: 4,
+    era: 'Thế kỷ 11',
+    title: 'Thái úy Quốc công',
+    quote: 'Nam quốc sơn hà Nam đế cư - Tuyệt nhiên định phận tại thiên thư!',
+    description: 'Nhà quân sự kiệt xuất với chiến lược tiên phát chế nhân và bản Tuyên ngôn Độc lập đầu tiên bên bờ sông Như Nguyệt.',
+    isCollected: false,
+  ),
+  const HeroCardModel(
+    id: 'card_tran_hung_dao',
+    heroName: 'Trần Quốc Tuấn',
+    stars: 5,
+    era: 'Thế kỷ 13',
+    title: 'Hưng Đạo Đại Vương',
+    quote: 'Nếu bệ hạ muốn hàng, trước hết hãy chém đầu thần rồi hãy hàng!',
+    description: 'Thiên tài quân sự ba lần lãnh đạo quân dân Đại Việt đánh tan đế quốc Nguyên Mông hùng mạnh bậc nhất thế giới.',
+    isCollected: true,
+  ),
+  const HeroCardModel(
+    id: 'card_quang_trung',
+    heroName: 'Quang Trung · Nguyễn Huệ',
+    stars: 5,
+    era: 'Thế kỷ 18',
+    title: 'Bắc Bình Vương · Hoàng đế Tây Sơn',
+    quote: 'Đánh cho để dài tóc, đánh cho để đen răng, đánh cho nó chích luân bất phản!',
+    description: 'Thần tốc hành quân ra Bắc, đại phá 29 vạn quân Mãn Thanh mùa xuân Kỷ Dậu 1789.',
+    isCollected: false,
+  ),
+];

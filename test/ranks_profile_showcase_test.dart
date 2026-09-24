@@ -30,9 +30,9 @@ void main() {
 
       // Check header and tabs
       expect(find.text('Bảng Vàng'), findsOneWidget);
-      expect(find.text('Điểm'), findsOneWidget);
-      expect(find.text('Danh hiệu'), findsOneWidget);
-      expect(find.text('Chuỗi ngày'), findsOneWidget);
+      expect(find.text('Đấu Hạng Tuần'), findsOneWidget);
+      expect(find.text('Điểm Mùa'), findsOneWidget);
+      expect(find.text('Bia Tiến Sĩ'), findsOneWidget);
 
       // Check top 1 winner Minh Quân and his title
       expect(find.text('Minh Quân'), findsOneWidget);

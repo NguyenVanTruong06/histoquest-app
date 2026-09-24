@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/year_format.dart';
 import '../../../../data/models/historical_event_model.dart';
@@ -129,9 +130,11 @@ class _MapEventNodeState extends State<MapEventNode>
 
   void _handleTap() {
     if (widget.state == MapNodeState.locked) {
+      HapticFeedback.mediumImpact();
       _shakeController.forward(from: 0.0);
       widget.onLockedTap?.call();
     } else {
+      HapticFeedback.lightImpact();
       widget.onTap();
     }
   }

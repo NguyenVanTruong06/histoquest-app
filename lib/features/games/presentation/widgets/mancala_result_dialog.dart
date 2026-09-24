@@ -3,6 +3,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/secondary_button.dart';
 import '../../../../shared/widgets/stat_badge.dart';
+import '../../data/game_economy_service.dart';
 import '../../data/mancala_engine.dart';
 
 /// Màn hình / Hộp thoại Kết quả Minigame Ô Ăn Quan
@@ -264,6 +265,7 @@ class MancalaResultDialog extends StatelessWidget {
               height: 52,
               icon: const Icon(Icons.card_giftcard_rounded, color: Colors.white, size: 20),
               onPressed: () {
+                GameEconomyService.awardGameRewards(coins: coinReward, xp: xpReward, gameTitle: 'Cờ Ô Ăn Quan');
                 Navigator.pop(context);
                 onPlayAgain();
               },
@@ -279,6 +281,7 @@ class MancalaResultDialog extends StatelessWidget {
               fontSize: 14,
               icon: const Icon(Icons.home_rounded, color: AppColors.primaryDark, size: 18),
               onPressed: () {
+                GameEconomyService.awardGameRewards(coins: coinReward, xp: xpReward, gameTitle: 'Cờ Ô Ăn Quan');
                 Navigator.pop(context);
                 onExit();
               },

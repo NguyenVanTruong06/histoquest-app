@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import '../data/game_economy_service.dart';
 
 class BachDangGameScreen extends StatefulWidget {
   const BachDangGameScreen({super.key});
@@ -63,6 +64,28 @@ class _BachDangGameScreenState extends State<BachDangGameScreen> {
       _isGameOver = true;
     });
     _tideTimer?.cancel();
+
+    if (isWin) {
+      GameEconomyService.showVictoryDialog(
+        context: context,
+        gameTitle: 'Bạch Đằng Cọc Ngầm',
+        coins: 20,
+        xp: 120,
+        message: message,
+        onPlayAgain: () {
+          setState(() {
+            _waterLevel = 1.0;
+            _spikesActivated = false;
+            _isGameOver = false;
+          });
+          _startTide();
+        },
+        onExit: () {
+          Navigator.pop(context);
+        },
+      );
+      return;
+    }
 
     showDialog(
       context: context,
@@ -170,14 +193,16 @@ class _BachDangGameScreenState extends State<BachDangGameScreen> {
                     child: Container(
                       margin: const EdgeInsets.only(top: 24, bottom: 24, right: 24),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade800,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.blue.shade700,
+                            Colors.blue.shade900,
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.blue.shade200, width: 4),
-                        image: const DecorationImage(
-                          image: NetworkImage('https://www.transparenttextures.com/patterns/water.png'),
-                          repeat: ImageRepeat.repeat,
-                          opacity: 0.3,
-                        ),
                       ),
                       child: Stack(
                         alignment: Alignment.center,
